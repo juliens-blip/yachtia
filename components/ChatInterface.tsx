@@ -7,20 +7,7 @@
 
 import { useState, useRef, useEffect } from 'react'
 import MessageBubble from './MessageBubble'
-
-type Source = {
-  documentName: string
-  category: string
-  similarity: number
-  pageNumber?: number | null
-}
-
-type Message = {
-  role: 'user' | 'assistant'
-  content: string
-  sources?: Source[]
-  timestamp?: string
-}
+import { Message, Source } from '@/lib/types'
 
 export default function ChatInterface() {
   const [messages, setMessages] = useState<Message[]>([])

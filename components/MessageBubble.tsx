@@ -3,19 +3,7 @@
  * Displays individual chat messages from user or assistant
  */
 
-interface Source {
-  documentName: string
-  category: string
-  similarity: number
-  pageNumber?: number
-}
-
-interface MessageBubbleProps {
-  role: 'user' | 'assistant'
-  content: string
-  sources?: Source[]
-  timestamp?: string
-}
+import { MessageBubbleProps } from '@/lib/types'
 
 export default function MessageBubble({ role, content, sources, timestamp }: MessageBubbleProps) {
   const isUser = role === 'user'

@@ -7,7 +7,9 @@
  * - Preserves sentence boundaries when possible
  */
 
-import { encode } from 'js-tiktoken/lite'
+import { encoding_for_model } from 'js-tiktoken'
+
+const enc = encoding_for_model('gpt-3.5-turbo')
 
 const CHUNK_SIZE = 500 // tokens
 const OVERLAP = 100 // tokens
@@ -38,8 +40,7 @@ export function chunkText(
   }
 
   try {
-    const encoder = encode
-    const tokens = encoder(text)
+    const tokens = enc.encode(text)
     const chunks: TextChunk[] = []
 
     let startIndex = 0
@@ -127,8 +128,7 @@ function fallbackCharacterChunking(text: string, maxChars: number): TextChunk[] 
  */
 export function estimateTokenCount(text: string): number {
   try {
-    const encoder = encode
-    return encoder(text).length
+    return enc.encode(text).length
   } catch {
     // Fallback: ~4 characters per token
     return Math.floor(text.length / 4)
