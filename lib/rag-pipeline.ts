@@ -166,8 +166,7 @@ export async function searchByCategory(
         chunk_text,
         page_number,
         chunk_index,
-        documents (
-          id,
+        documents!inner (
           name,
           category
         )
