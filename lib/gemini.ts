@@ -52,8 +52,8 @@ export async function generateAnswer(
   conversationHistory?: Array<{ role: string; content: string }>
 ): Promise<string> {
   try {
-    // Use gemini-1.5-flash (fastest, cheapest, fully available)
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' })
+    // Use gemini-2.0-flash (fastest, most capable, fully available)
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' })
 
     const systemPrompt = `Tu es un assistant juridique spécialisé en droit maritime pour brokers de yachts.
 
