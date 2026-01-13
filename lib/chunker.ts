@@ -2,17 +2,14 @@
  * Text Chunking Utilities
  *
  * Smart text chunking for optimal RAG performance:
- * - Chunk size: 500 tokens
+ * - Chunk size: 500 tokens (~2000 characters, assuming 4 chars per token)
  * - Overlap: 100 tokens (20%)
  * - Preserves sentence boundaries when possible
  */
 
-import { encoding_for_model } from 'js-tiktoken'
-
-const enc = encoding_for_model('gpt-3.5-turbo')
-
 const CHUNK_SIZE = 500 // tokens
 const OVERLAP = 100 // tokens
+const CHARS_PER_TOKEN = 4 // Average estimate
 
 export type TextChunk = {
   text: string
@@ -23,12 +20,16 @@ export type TextChunk = {
 }
 
 /**
+ * Estimate token count from character count
+ * Assumes ~4 characters per token on average
+ */
+function estimateTokens(charCount: number): number {
+  return Math.ceil(charCount / CHARS_PER_TOKEN)
+}
+
+/**
  * Split text into overlapping chunks
- *
- * @param text - Text to chunk
- * @param chunkSize - Target chunk size in tokens (default: 500)
- * @param overlap - Overlap between chunks in tokens (default: 100)
- * @returns Array of chunks with metadata
+ * Uses character-based chunking with token estimation
  */
 export function chunkText(
   text: string,
@@ -39,83 +40,72 @@ export function chunkText(
     return []
   }
 
-  try {
-    const tokens = enc.encode(text)
-    const chunks: TextChunk[] = []
+  const charChunkSize = chunkSize * CHARS_PER_TOKEN
+  const charOverlap = overlap * CHARS_PER_TOKEN
 
-    let startIndex = 0
-    let chunkIndex = 0
+  return smartChunkText(text, charChunkSize, charOverlap)
+}
 
-    while (startIndex < tokens.length) {
-      // Calculate end index for this chunk
-      const endIndex = Math.min(startIndex + chunkSize, tokens.length)
+/**
+ * Smart chunking that preserves sentence boundaries
+ * More sophisticated than simple character chunking
+ */
+export function smartChunkText(
+  text: string,
+  charChunkSize: number = CHUNK_SIZE * CHARS_PER_TOKEN,
+  charOverlap: number = OVERLAP * CHARS_PER_TOKEN
+): TextChunk[] {
+  // Split by sentences (basic approach: split on . ! ?)
+  const sentenceRegex = /[^.!?]+[.!?]+/g
+  const sentences = text.match(sentenceRegex) || [text]
 
-      // Extract token slice
-      const chunkTokens = tokens.slice(startIndex, endIndex)
+  const chunks: TextChunk[] = []
+  let currentChunk = ''
+  let currentChars = 0
+  let chunkIndex = 0
+  let startChar = 0
 
-      // Decode tokens back to text
-      // Note: This is a simplified approach. For production, consider using
-      // a proper tokenizer library that can decode token arrays
-      const chunkText = decodeTokens(chunkTokens)
+  for (const sentence of sentences) {
+    const sentenceChars = sentence.length
 
+    // If adding this sentence would exceed target, start new chunk
+    if (currentChars + sentenceChars > charChunkSize && currentChunk.length > 0) {
+      const trimmedChunk = currentChunk.trim()
       chunks.push({
-        text: chunkText,
-        tokenCount: chunkTokens.length,
+        text: trimmedChunk,
+        tokenCount: estimateTokens(trimmedChunk.length),
         index: chunkIndex,
-        startChar: startIndex,
-        endChar: endIndex
+        startChar,
+        endChar: startChar + trimmedChunk.length
       })
 
-      // Move to next chunk with overlap
-      startIndex += (chunkSize - overlap)
       chunkIndex++
+      startChar += trimmedChunk.length
+
+      // Add overlap from previous chunk if possible
+      if (currentChunk.length > charOverlap) {
+        currentChunk = currentChunk.slice(-charOverlap) + sentence
+        currentChars = charOverlap + sentenceChars
+      } else {
+        currentChunk = sentence
+        currentChars = sentenceChars
+      }
+    } else {
+      currentChunk += sentence
+      currentChars += sentenceChars
     }
-
-    return chunks
-  } catch (error) {
-    console.error('Chunking error:', error)
-    // Fallback: simple character-based chunking
-    return fallbackCharacterChunking(text, chunkSize * 4) // ~4 chars per token average
   }
-}
 
-/**
- * Decode token array back to text
- * This is a simplified version - for production use proper tokenizer
- */
-function decodeTokens(tokens: number[]): string {
-  try {
-    // For now, use simple conversion
-    // TODO: Implement proper token decoding when needed
-    return tokens.map(t => String.fromCharCode(t)).join('')
-  } catch {
-    return ''
-  }
-}
-
-/**
- * Fallback chunking strategy using character count
- * Used if token-based chunking fails
- */
-function fallbackCharacterChunking(text: string, maxChars: number): TextChunk[] {
-  const chunks: TextChunk[] = []
-  let startChar = 0
-  let chunkIndex = 0
-
-  while (startChar < text.length) {
-    const endChar = Math.min(startChar + maxChars, text.length)
-    const chunkText = text.substring(startChar, endChar)
-
+  // Add final chunk
+  if (currentChunk.length > 0) {
+    const trimmedChunk = currentChunk.trim()
     chunks.push({
-      text: chunkText,
-      tokenCount: Math.floor(chunkText.length / 4), // Rough estimate
+      text: trimmedChunk,
+      tokenCount: estimateTokens(trimmedChunk.length),
       index: chunkIndex,
       startChar,
-      endChar
+      endChar: startChar + trimmedChunk.length
     })
-
-    startChar += maxChars - Math.floor(maxChars * 0.2) // 20% overlap
-    chunkIndex++
   }
 
   return chunks
@@ -123,69 +113,8 @@ function fallbackCharacterChunking(text: string, maxChars: number): TextChunk[] 
 
 /**
  * Estimate token count for text
- * @param text - Text to analyze
- * @returns Estimated token count
+ * Based on character count: ~4 characters per token
  */
 export function estimateTokenCount(text: string): number {
-  try {
-    return enc.encode(text).length
-  } catch {
-    // Fallback: ~4 characters per token
-    return Math.floor(text.length / 4)
-  }
-}
-
-/**
- * Smart chunking that preserves sentence boundaries
- * More sophisticated than simple token chunking
- *
- * @param text - Text to chunk
- * @param targetChunkSize - Target size in tokens
- * @returns Array of chunks aligned with sentence boundaries
- */
-export function smartChunkText(text: string, targetChunkSize: number = CHUNK_SIZE): TextChunk[] {
-  // Split by sentences
-  const sentences = text.match(/[^.!?]+[.!?]+/g) || [text]
-
-  const chunks: TextChunk[] = []
-  let currentChunk = ''
-  let currentTokens = 0
-  let chunkIndex = 0
-  let startChar = 0
-
-  for (const sentence of sentences) {
-    const sentenceTokens = estimateTokenCount(sentence)
-
-    // If adding this sentence would exceed target, start new chunk
-    if (currentTokens + sentenceTokens > targetChunkSize && currentChunk.length > 0) {
-      chunks.push({
-        text: currentChunk.trim(),
-        tokenCount: currentTokens,
-        index: chunkIndex,
-        startChar,
-        endChar: startChar + currentChunk.length
-      })
-
-      chunkIndex++
-      startChar += currentChunk.length
-      currentChunk = sentence
-      currentTokens = sentenceTokens
-    } else {
-      currentChunk += sentence
-      currentTokens += sentenceTokens
-    }
-  }
-
-  // Add final chunk
-  if (currentChunk.length > 0) {
-    chunks.push({
-      text: currentChunk.trim(),
-      tokenCount: currentTokens,
-      index: chunkIndex,
-      startChar,
-      endChar: startChar + currentChunk.length
-    })
-  }
-
-  return chunks
+  return estimateTokens(text.length)
 }
