@@ -33,18 +33,6 @@ type SearchDocumentsRow = {
   chunk_index: number
 }
 
-type CategorySearchRow = {
-  id: string
-  document_id: string
-  chunk_text: string
-  page_number: number | null
-  chunk_index: number
-  documents: {
-    name: string
-    category: string
-  }
-}
-
 /**
  * Retrieve relevant chunks for a query using vector search
  *
@@ -143,57 +131,6 @@ export function calculateConfidence(chunks: RelevantChunk[]): number {
   const avgOthers = chunks.slice(1).reduce((sum, c) => sum + c.similarity, 0) / Math.max(chunks.length - 1, 1)
 
   return topSimilarity * 0.5 + avgOthers * 0.5
-}
-
-/**
- * Search documents by category
- * Returns all chunks from documents in specified category
- *
- * @param category - Document category
- * @param limit - Max number of chunks (default: 20)
- * @returns Array of chunks
- */
-export async function searchByCategory(
-  category: string,
-  limit: number = 20
-): Promise<RelevantChunk[]> {
-  try {
-    const { data, error } = await supabaseAdmin
-      .from('document_chunks')
-      .select(`
-        id,
-        document_id,
-        chunk_text,
-        page_number,
-        chunk_index,
-        documents!inner (
-          name,
-          category
-        )
-      `)
-      .eq('documents.category', category)
-      .eq('documents.is_public', true)
-      .limit(limit)
-
-    if (error) {
-      console.error('Category search error:', error)
-      return []
-    }
-
-    return (data as CategorySearchRow[] | null || []).map((row) => ({
-      chunkId: row.id,
-      documentId: row.document_id,
-      documentName: row.documents.name,
-      category: row.documents.category,
-      chunkText: row.chunk_text,
-      similarity: 1.0, // No similarity score for category browse
-      pageNumber: row.page_number,
-      chunkIndex: row.chunk_index
-    }))
-  } catch (error) {
-    console.error('Category search exception:', error)
-    return []
-  }
 }
 
 /**
