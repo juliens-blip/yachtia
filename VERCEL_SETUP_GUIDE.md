@@ -15,13 +15,13 @@ The "Internal Server Error" on `/api/chat` is caused by **missing environment va
 
 ```
 Name: SUPABASE_SERVICE_ROLE_KEY
-Value: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhtYmF0dGV3dGxtamJ1Zml3dXh0Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2ODI0NTM3OSwiZXhwIjoyMDgzODIxMzc5fQ.k3BjmaOykZ5t0gYqO0H2bj34AMXyOk0a2H5k3Gv3mWI
+Value: YOUR_SUPABASE_SERVICE_ROLE_KEY
 Environments: ✓ Production, ✓ Preview, ✓ Development
 ```
 
 ```
 Name: GEMINI_API_KEY
-Value: AIzaSyBcqAr99ctVjDPNrUjv2cgNWCZBtEMwc70
+Value: YOUR_GEMINI_API_KEY
 Environments: ✓ Production, ✓ Preview, ✓ Development
 ```
 
@@ -35,7 +35,7 @@ Environments: ✓ Production, ✓ Preview, ✓ Development
 
 ```
 Name: NEXT_PUBLIC_SUPABASE_ANON_KEY
-Value: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhtYmF0dGV3dGxtamJ1Zml3dXh0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgyNDUzNzksImV4cCI6MjA4MzgyMTM3OX0.ZB20NuSkNCOG5AXh6nlt6bRp2r7GEF1ePEMjJmohnGA
+Value: YOUR_SUPABASE_ANON_KEY
 Environments: ✓ Production, ✓ Preview, ✓ Development
 ```
 

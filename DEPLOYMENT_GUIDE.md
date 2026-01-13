@@ -160,7 +160,7 @@ Should contain:
 NEXT_PUBLIC_SUPABASE_URL=https://hmbattewtlmjbufiwuxt.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-GEMINI_API_KEY=AIzaSyBcqAr99ctVjDPNrUjv2cgNWCZBtEMwc70
+GEMINI_API_KEY=YOUR_GEMINI_API_KEY
 ```
 
 **IMPORTANT**: Never commit `.env.local` to git!
@@ -265,7 +265,7 @@ LIMIT 10;
    NEXT_PUBLIC_SUPABASE_URL = https://hmbattewtlmjbufiwuxt.supabase.co
    NEXT_PUBLIC_SUPABASE_ANON_KEY = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
    SUPABASE_SERVICE_ROLE_KEY = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-   GEMINI_API_KEY = AIzaSyBcqAr99ctVjDPNrUjv2cgNWCZBtEMwc70
+   GEMINI_API_KEY = YOUR_GEMINI_API_KEY
    ```
 
    **IMPORTANT**: Check all environments (Production, Preview, Development)
