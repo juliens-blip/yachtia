@@ -52,7 +52,8 @@ export async function generateAnswer(
   conversationHistory?: Array<{ role: string; content: string }>
 ): Promise<string> {
   try {
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' })
+    // Try gemini-pro first (most stable), fallback to 1.5-flash if available
+    const model = genAI.getGenerativeModel({ model: 'gemini-pro' })
 
     const systemPrompt = `Tu es un assistant juridique spécialisé en droit maritime pour brokers de yachts.
 
