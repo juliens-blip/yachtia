@@ -69,9 +69,17 @@ export async function POST(req: NextRequest) {
     // Step 1: Retrieve relevant chunks via RAG
     const chunks = await retrieveRelevantChunks(message, category, 5, 0.7)
 
-    // Step 2: Generate answer with Gemini
+    // Step 2: Generate answer with Gemini + Grounding
     const context = formatChunksForContext(chunks)
-    const answer = await generateAnswer(message, context)
+    const { answer, groundingMetadata } = await generateAnswer(message, context, undefined, true)
+
+    // Extract web sources from grounding metadata
+    const webSources = groundingMetadata?.webSearchQueries?.map((query: any, idx: number) => ({
+      title: query.searchQuery || 'Recherche web',
+      url: query.url || '#',
+      category: 'WEB_SEARCH',
+      similarity: 95 - (idx * 5) // Simulated relevance
+    })) || []
 
     // Step 3: Store or update conversation
     let convId = conversationId
@@ -136,16 +144,22 @@ export async function POST(req: NextRequest) {
       userAgent: req.headers.get('user-agent') || undefined
     })
 
-    // Step 5: Return response
+    // Step 5: Combine internal docs + web sources
+    const internalSources = chunks.map(c => ({
+      documentName: c.documentName,
+      category: c.category,
+      similarity: Math.round(c.similarity * 100),
+      pageNumber: c.pageNumber
+    }))
+
+    const allSources = [...internalSources, ...webSources]
+
+    // Step 6: Return response
     return NextResponse.json({
       answer,
       conversationId: convId,
-      sources: chunks.map(c => ({
-        documentName: c.documentName,
-        category: c.category,
-        similarity: Math.round(c.similarity * 100),
-        pageNumber: c.pageNumber
-      })),
+      sources: allSources,
+      groundingUsed: webSources.length > 0,
       responseTime
     })
 

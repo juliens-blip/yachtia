@@ -94,13 +94,42 @@ export default function ChatInterface() {
   }
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full bg-gray-50 dark:bg-gray-900">
       {/* Messages Area */}
       <div className="flex-1 overflow-y-auto p-6 space-y-4">
         {messages.length === 0 && (
-          <div className="text-center text-gray-500 mt-20">
-            <p className="text-lg font-semibold mb-2">Bienvenue sur Yacht Legal AI</p>
+          <div className="text-center text-gray-500 dark:text-gray-400 mt-20">
+            <div className="text-5xl mb-4">⚓</div>
+            <p className="text-xl font-semibold mb-2 text-gray-800 dark:text-gray-200">
+              Yacht Legal AI
+            </p>
             <p className="text-sm">Posez votre question juridique en droit maritime...</p>
+            <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-3 max-w-2xl mx-auto text-left">
+              <button
+                onClick={() => setInput("Quelles sont les obligations AML pour yacht brokers en France?")}
+                className="p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg hover:shadow-md transition text-sm text-gray-700 dark:text-gray-300"
+              >
+                💼 Obligations AML pour yacht brokers
+              </button>
+              <button
+                onClick={() => setInput("Explique-moi le MYBA Charter Agreement")}
+                className="p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg hover:shadow-md transition text-sm text-gray-700 dark:text-gray-300"
+              >
+                📄 MYBA Charter Agreement
+              </button>
+              <button
+                onClick={() => setInput("Qu'est-ce que le YET scheme?")}
+                className="p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg hover:shadow-md transition text-sm text-gray-700 dark:text-gray-300"
+              >
+                🏴 YET Scheme
+              </button>
+              <button
+                onClick={() => setInput("Droits de l'équipage selon MLC 2006?")}
+                className="p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg hover:shadow-md transition text-sm text-gray-700 dark:text-gray-300"
+              >
+                👥 Droits MLC 2006
+              </button>
+            </div>
           </div>
         )}
 
@@ -130,26 +159,36 @@ export default function ChatInterface() {
       </div>
 
       {/* Input Area */}
-      <div className="border-t border-gray-200 bg-white p-4">
+      <div className="border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4">
         <div className="flex gap-2">
           <textarea
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyPress={handleKeyPress}
             placeholder="Posez votre question juridique... (Ex: Quels sont les requirements AML?)"
-            className="flex-1 border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-luxury-navy-500 resize-none"
+            className="flex-1 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-luxury-navy-500 resize-none"
             disabled={loading}
             rows={2}
           />
           <button
             onClick={handleSend}
             disabled={loading || !input.trim()}
-            className="bg-luxury-navy-500 text-white px-8 py-3 rounded-lg hover:bg-luxury-navy-600 disabled:opacity-50 disabled:cursor-not-allowed transition font-semibold"
+            className="bg-luxury-navy-500 text-white px-8 py-3 rounded-lg hover:bg-luxury-navy-600 disabled:opacity-50 disabled:cursor-not-allowed transition font-semibold shadow-lg"
           >
-            {loading ? 'Envoi...' : 'Envoyer'}
+            {loading ? (
+              <span className="flex items-center gap-2">
+                <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                </svg>
+                Envoi...
+              </span>
+            ) : (
+              'Envoyer'
+            )}
           </button>
         </div>
-        <p className="text-xs text-gray-500 mt-2">
+        <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
           Appuyez sur Entrée pour envoyer, Maj+Entrée pour nouvelle ligne
         </p>
       </div>

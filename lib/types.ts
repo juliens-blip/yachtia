@@ -3,9 +3,11 @@
  */
 
 export type Source = {
-  documentName: string
+  documentName?: string
+  title?: string
+  url?: string
   category: string
-  similarity: number
+  similarity?: number
   pageNumber?: number | null
 }
 

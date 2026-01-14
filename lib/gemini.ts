@@ -49,26 +49,37 @@ export async function generateEmbedding(text: string): Promise<number[]> {
 export async function generateAnswer(
   question: string,
   context: string[],
-  conversationHistory?: Array<{ role: string; content: string }>
-): Promise<string> {
+  conversationHistory?: Array<{ role: string; content: string }>,
+  enableGrounding: boolean = true
+): Promise<{ answer: string; groundingMetadata?: any }> {
   try {
-    // Use gemini-2.0-flash (fastest, most capable, fully available)
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' })
+    // Use gemini-2.0-flash with optional grounding
+    const modelConfig: any = { model: 'gemini-2.0-flash' }
+    
+    // Enable Google Search grounding if requested
+    if (enableGrounding) {
+      modelConfig.tools = [{
+        googleSearch: {}
+      }]
+    }
+
+    const model = genAI.getGenerativeModel(modelConfig)
 
     const systemPrompt = `Tu es un assistant juridique spécialisé en droit maritime pour brokers de yachts.
 
 RÈGLES STRICTES:
-1. Réponds UNIQUEMENT en te basant sur le CONTEXTE fourni ci-dessous
-2. Si le contexte ne contient pas d'information pertinente, dis clairement "Je n'ai pas trouvé d'information dans les documents disponibles"
-3. Cite toujours les sources (nom du document) dans ta réponse
-4. Utilise un langage juridique précis mais accessible
-5. Sois concis et direct - pas de verbiage inutile
-6. Inclus toujours le disclaimer de non-responsabilité à la fin
+1. Utilise PRIORITAIREMENT le CONTEXTE DOCUMENTAIRE ci-dessous (sources internes fiables)
+2. Si le contexte documentaire est insuffisant, utilise la recherche web pour des informations complémentaires récentes
+3. Distingue clairement les informations provenant des documents internes vs recherche web
+4. Cite TOUJOURS les sources avec leurs URLs quand disponibles
+5. Pour informations récentes (2024+), privilégie la recherche web
+6. Utilise un langage juridique précis mais accessible
+7. Sois concis et direct - pas de verbiage inutile
 
-CONTEXTE DOCUMENTAIRE:
-${context.length > 0 ? context.join('\n\n---\n\n') : 'Aucun document pertinent trouvé.'}
+CONTEXTE DOCUMENTAIRE (Sources internes):
+${context.length > 0 ? context.join('\n\n---\n\n') : 'Aucun document pertinent trouvé dans la base interne.'}
 
-⚠️ DISCLAIMER OBLIGATOIRE: Les informations fournies sont à titre informatif uniquement et ne constituent pas un avis juridique. Pour toute décision importante concernant vos transactions maritimes, veuillez consulter un avocat maritime qualifié.`
+⚠️ DISCLAIMER: Les informations fournies sont à titre informatif uniquement et ne constituent pas un avis juridique. Pour toute décision importante concernant vos transactions maritimes, veuillez consulter un avocat maritime qualifié.`
 
     // Build conversation history for context
     const history = conversationHistory?.map(msg => ({
@@ -83,7 +94,13 @@ ${context.length > 0 ? context.join('\n\n---\n\n') : 'Aucun document pertinent t
     const result = await chat.sendMessage(systemPrompt + '\n\nQUESTION: ' + question)
     const response = result.response
 
-    return response.text()
+    // Extract grounding metadata if available
+    const groundingMetadata = (response as any).groundingMetadata || null
+
+    return {
+      answer: response.text(),
+      groundingMetadata
+    }
   } catch (error) {
     console.error('Gemini generation error:', error)
     throw new Error(`Failed to generate answer: ${error instanceof Error ? error.message : 'Unknown error'}`)
