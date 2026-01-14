@@ -20,13 +20,11 @@ import * as path from 'path'
 dotenv.config({ path: path.join(__dirname, '../.env.local') })
 
 import { REFERENCE_DOCS, type ReferenceDocument, getReferenceStats } from './reference-urls'
-import * as pdfParser from '../lib/pdf-parser'
+import { extractTextFromPDF } from '../lib/pdf-parser'
 import { scrapeWebPage, downloadPDF } from '../lib/web-scraper'
 import { chunkText } from '../lib/chunker'
 import { generateEmbedding } from '../lib/gemini'
 import { supabaseAdmin } from '../lib/supabase'
-
-const { parsePDF } = pdfParser
 
 // Configuration
 const BATCH_SIZE = 10  // Embeddings par batch (rate limiting)
@@ -70,7 +68,7 @@ async function ingestDocument(
     
     if (doc.type === 'pdf') {
       const buffer = await downloadPDF(doc.url)
-      const parsed = await parsePDF(buffer)
+      const parsed = await extractTextFromPDF(buffer)
       text = parsed.text
       pages = parsed.pages
       console.log(`   📖 ${pages} pages extraites`)
@@ -145,18 +143,18 @@ async function ingestDocument(
       try {
         // Generate embeddings in parallel for this batch
         const embeddings = await Promise.all(
-          batch.map(chunkText => generateEmbedding(chunkText))
+          batch.map(chunk => generateEmbedding(chunk.text))
         )
-        
+
         // Build records
-        batch.forEach((chunkText, j) => {
+        batch.forEach((chunk, j) => {
           chunkRecords.push({
             document_id: document.id,
             chunk_index: i + j,
-            chunk_text: chunkText,
+            chunk_text: chunk.text,
             embedding: embeddings[j],
             page_number: null,  // Could be inferred from chunk position if needed
-            token_count: Math.ceil(chunkText.split(/\s+/).length)
+            token_count: chunk.tokenCount
           })
         })
         

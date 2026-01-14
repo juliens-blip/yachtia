@@ -49,21 +49,13 @@ export async function generateEmbedding(text: string): Promise<number[]> {
 export async function generateAnswer(
   question: string,
   context: string[],
-  conversationHistory?: Array<{ role: string; content: string }>,
-  enableGrounding: boolean = true
-): Promise<{ answer: string; groundingMetadata?: any }> {
+  conversationHistory?: Array<{ role: string; content: string }>
+  // enableGrounding parameter removed - grounding requires specific API setup
+): Promise<{ answer: string; groundingMetadata?: Record<string, unknown> }> {
   try {
     // Use gemini-2.0-flash with optional grounding
-    const modelConfig: any = { model: 'gemini-2.0-flash' }
-    
-    // Enable Google Search grounding if requested
-    if (enableGrounding) {
-      modelConfig.tools = [{
-        googleSearch: {}
-      }]
-    }
-
-    const model = genAI.getGenerativeModel(modelConfig)
+    // Note: googleSearch tool requires specific API config
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' })
 
     const systemPrompt = `Tu es un assistant juridique spécialisé en droit maritime pour brokers de yachts.
 
@@ -95,7 +87,7 @@ ${context.length > 0 ? context.join('\n\n---\n\n') : 'Aucun document pertinent t
     const response = result.response
 
     // Extract grounding metadata if available
-    const groundingMetadata = (response as any).groundingMetadata || null
+    const groundingMetadata = (response as unknown as { groundingMetadata?: Record<string, unknown> }).groundingMetadata || undefined
 
     return {
       answer: response.text(),

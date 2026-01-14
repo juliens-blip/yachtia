@@ -71,10 +71,10 @@ export async function POST(req: NextRequest) {
 
     // Step 2: Generate answer with Gemini + Grounding
     const context = formatChunksForContext(chunks)
-    const { answer, groundingMetadata } = await generateAnswer(message, context, undefined, true)
+    const { answer, groundingMetadata } = await generateAnswer(message, context, undefined)
 
     // Extract web sources from grounding metadata
-    const webSources = groundingMetadata?.webSearchQueries?.map((query: any, idx: number) => ({
+    const webSources = (groundingMetadata?.webSearchQueries as Array<{ searchQuery?: string; url?: string }> | undefined)?.map((query, idx: number) => ({
       title: query.searchQuery || 'Recherche web',
       url: query.url || '#',
       category: 'WEB_SEARCH',

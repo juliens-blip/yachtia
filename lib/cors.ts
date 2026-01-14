@@ -14,7 +14,7 @@ const CORS_HEADERS = {
 /**
  * Create JSON response with CORS headers
  */
-export function jsonWithCors(body: any, init?: ResponseInit) {
+export function jsonWithCors(body: unknown, init?: ResponseInit) {
   const res = NextResponse.json(body, init)
   Object.entries(CORS_HEADERS).forEach(([k, v]) => res.headers.set(k, v))
   return res

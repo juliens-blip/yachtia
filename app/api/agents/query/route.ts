@@ -121,7 +121,7 @@ export async function POST(req: NextRequest) {
 
     // Generate answer with grounding
     const context = formatChunksForContext(chunks)
-    const { answer, groundingMetadata } = await generateAnswer(query, context, undefined, true)
+    const { answer, groundingMetadata } = await generateAnswer(query, context, undefined)
 
     // Extract web sources from groundingChunks (P1 fix - was using webSearchQueries)
     interface GroundingChunk {

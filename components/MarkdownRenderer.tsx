@@ -23,7 +23,7 @@ export default function MarkdownRenderer({ content, sources }: MarkdownRendererP
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
         components={{
-          code({ node, inline, className, children, ...props }: any) {
+          code({ inline, className, children, ...props }: { inline?: boolean; className?: string; children?: React.ReactNode }) {
             const match = /language-(\w+)/.exec(className || '')
             return !inline && match ? (
               <SyntaxHighlighter
@@ -41,7 +41,7 @@ export default function MarkdownRenderer({ content, sources }: MarkdownRendererP
               </code>
             )
           },
-          a({ href, children }: any) {
+          a({ href, children }: { href?: string; children?: React.ReactNode }) {
             return (
               <a
                 href={href}
@@ -53,32 +53,32 @@ export default function MarkdownRenderer({ content, sources }: MarkdownRendererP
               </a>
             )
           },
-          p({ children }: any) {
+          p({ children }: { children?: React.ReactNode }) {
             return <p className="mb-4 leading-relaxed">{children}</p>
           },
-          ul({ children }: any) {
+          ul({ children }: { children?: React.ReactNode }) {
             return <ul className="list-disc list-inside mb-4 space-y-2">{children}</ul>
           },
-          ol({ children }: any) {
+          ol({ children }: { children?: React.ReactNode }) {
             return <ol className="list-decimal list-inside mb-4 space-y-2">{children}</ol>
           },
-          h1({ children }: any) {
+          h1({ children }: { children?: React.ReactNode }) {
             return <h1 className="text-2xl font-bold mb-4 mt-6">{children}</h1>
           },
-          h2({ children }: any) {
+          h2({ children }: { children?: React.ReactNode }) {
             return <h2 className="text-xl font-semibold mb-3 mt-5">{children}</h2>
           },
-          h3({ children }: any) {
+          h3({ children }: { children?: React.ReactNode }) {
             return <h3 className="text-lg font-semibold mb-2 mt-4">{children}</h3>
           },
-          blockquote({ children }: any) {
+          blockquote({ children }: { children?: React.ReactNode }) {
             return (
               <blockquote className="border-l-4 border-gray-300 dark:border-gray-600 pl-4 italic my-4 text-gray-700 dark:text-gray-300">
                 {children}
               </blockquote>
             )
           },
-          table({ children }: any) {
+          table({ children }: { children?: React.ReactNode }) {
             return (
               <div className="overflow-x-auto my-4">
                 <table className="min-w-full border-collapse border border-gray-300 dark:border-gray-700">
@@ -87,14 +87,14 @@ export default function MarkdownRenderer({ content, sources }: MarkdownRendererP
               </div>
             )
           },
-          th({ children }: any) {
+          th({ children }: { children?: React.ReactNode }) {
             return (
               <th className="border border-gray-300 dark:border-gray-700 bg-gray-100 dark:bg-gray-800 px-4 py-2 text-left font-semibold">
                 {children}
               </th>
             )
           },
-          td({ children }: any) {
+          td({ children }: { children?: React.ReactNode }) {
             return (
               <td className="border border-gray-300 dark:border-gray-700 px-4 py-2">
                 {children}

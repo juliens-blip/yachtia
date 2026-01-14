@@ -158,8 +158,7 @@ export async function POST(req: NextRequest) {
     const { answer: analysis } = await generateAnswer(
       analysisPrompt,
       [`Document: ${file.name}\n\nContent:\n${truncatedText}`],
-      undefined,
-      false // No grounding for document analysis
+      undefined
     )
 
     const responseTime = Date.now() - startTime
