@@ -84,7 +84,7 @@ async function ingestDocument(
     console.log(`   ✂️  Texte total: ${text.length} caractères`)
     
     // ──────────────────────────────────────────────────────
-    // ÉTAPE 2: Stocker document dans DB
+    // ETAPE 2: Stocker document dans DB
     // ──────────────────────────────────────────────────────
     const { data: document, error: docError } = await supabaseAdmin
       .from('documents')
@@ -93,6 +93,8 @@ async function ingestDocument(
         category,
         pages: pages || null,
         file_url: doc.url,
+        source_url: doc.url,  // Also set source_url for compatibility
+        is_public: true,      // Required for RAG search (RLS policy)
         metadata: {
           source: doc.url,
           type: doc.type,
@@ -121,13 +123,13 @@ async function ingestDocument(
     }
     
     // ──────────────────────────────────────────────────────
-    // ÉTAPE 4: Générer embeddings (batch processing)
+    // ETAPE 4: Generer embeddings (batch processing)
     // ──────────────────────────────────────────────────────
     const chunkRecords: Array<{
       document_id: string
       chunk_index: number
       chunk_text: string
-      embedding: number[]
+      chunk_vector: number[]  // Correct column name from migration 003
       page_number: number | null
       token_count: number
     }> = []
@@ -152,7 +154,7 @@ async function ingestDocument(
             document_id: document.id,
             chunk_index: i + j,
             chunk_text: chunk.text,
-            embedding: embeddings[j],
+            chunk_vector: embeddings[j],  // Correct column name
             page_number: null,  // Could be inferred from chunk position if needed
             token_count: chunk.tokenCount
           })

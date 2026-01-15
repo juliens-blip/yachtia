@@ -382,6 +382,312 @@ export const REFERENCE_DOCS: Record<string, ReferenceDocument[]> = {
       type: 'html',
       language: 'en'
     }
+  ],
+
+  // ═══════════════════════════════════════════════════════════
+  // DROIT INTERNATIONAL DE LA MER / EAUX INTERNATIONALES
+  // UNCLOS, COLREG, haute mer, passage innocent, Port State Control
+  // ═══════════════════════════════════════════════════════════
+  DROIT_MER_INTERNATIONAL: [
+    // UNCLOS - Convention des Nations unies sur le droit de la mer
+    {
+      url: 'https://www.un.org/depts/los/convention_agreements/texts/unclos/unclos_e.pdf',
+      name: 'UNCLOS - Texte complet (PDF)',
+      type: 'pdf',
+      language: 'en'
+    },
+    {
+      url: 'https://www.un.org/depts/los/convention_agreements/texts/unclos/part7.htm',
+      name: 'UNCLOS Part VII - High Seas (Haute mer, navigation, pavillon)',
+      type: 'html',
+      language: 'en'
+    },
+    {
+      url: 'https://www.imo.org/en/MediaCentre/SecretaryGeneral/Pages/itlos.aspx',
+      name: 'IMO - ITLOS & Rôle UNCLOS dans le droit de la mer',
+      type: 'html',
+      language: 'en'
+    },
+    // COLREG 1972 - Prévention des abordages
+    {
+      url: 'https://www.imo.org/en/ourwork/safety/pages/preventing-collisions.aspx',
+      name: 'IMO - COLREG 1972 (Preventing Collisions at Sea)',
+      type: 'html',
+      language: 'en'
+    },
+    {
+      url: 'https://www.samgongustofa.is/media/log-og-reglur/COLREG-Consolidated-2018.pdf',
+      name: 'COLREG Consolidated 2018 (PDF)',
+      type: 'pdf',
+      language: 'en'
+    },
+    // Eaux internationales / Haute mer
+    {
+      url: 'https://www.yachtbuyer.com/en/advice/what-are-international-waters',
+      name: 'YachtBuyer - What Are International Waters?',
+      type: 'html',
+      language: 'en'
+    },
+    {
+      url: 'https://www.rmg.co.uk/stories/ocean/what-un-high-seas-treaty',
+      name: 'Royal Museums Greenwich - UN High Seas Treaty Explained',
+      type: 'html',
+      language: 'en'
+    },
+    // Passage innocent / Droit État côtier
+    {
+      url: 'https://www.rya.org.uk/boating-abroad/law-of-the-sea-and-coastal-state',
+      name: 'RYA - Law of the Sea and Coastal State Rights',
+      type: 'html',
+      language: 'en'
+    },
+    // Port State Control - Mémorandum de Paris
+    {
+      url: 'https://parismou.org/PMoU-Procedures/Library/memorandum',
+      name: 'Paris MoU - Memorandum Text',
+      type: 'html',
+      language: 'en'
+    },
+    {
+      url: 'https://www.iaphworldports.org/n-iaph/wp-content/uploads/legal-db/A-24-PARIS-MEMORANDUM-OF-UNDERSTANDING.pdf',
+      name: 'Paris MoU - Full Text (PDF IAPH)',
+      type: 'pdf',
+      language: 'en'
+    },
+    {
+      url: 'https://parismou.org/PMoU-Procedures/Lybrary/port-state-control-inspections-paris-mou',
+      name: 'Paris MoU - Port State Control Inspections Guide',
+      type: 'html',
+      language: 'en'
+    },
+    // Liberté de navigation (doctrine)
+    {
+      url: 'https://www.iflos.org/wp-content/uploads/blanco-bazan-lecture.pdf',
+      name: 'IFLOS - Freedom of Navigation Lecture (Blanco-Bazan PDF)',
+      type: 'pdf',
+      language: 'en'
+    },
+    {
+      url: 'https://www.itlos.org/fileadmin/itlos/documents/statements_of_president/wolfrum/freedom_navigation_080108_eng.pdf',
+      name: 'ITLOS - Freedom of Navigation: New Challenges (PDF)',
+      type: 'pdf',
+      language: 'en'
+    }
+  ],
+
+  // ═══════════════════════════════════════════════════════════
+  // PAVILLONS OFFICIELS - ÎLES MARSHALL (RMI)
+  // Manning, Yacht Code, certificats
+  // ═══════════════════════════════════════════════════════════
+  PAVILLON_MARSHALL: [
+    {
+      url: 'https://www.register-iri.com/yacht/yacht-general-information/manning-crew-requirements/',
+      name: 'RMI - Manning & Crew Requirements for Yachts',
+      type: 'html',
+      language: 'en'
+    },
+    {
+      url: 'https://www.register-iri.com/wp-content/uploads/The-Marshall-Islands-Registry-Yachts-Printable-1.pdf',
+      name: 'RMI - Yacht Registry Brochure (PDF)',
+      type: 'pdf',
+      language: 'en'
+    },
+    {
+      url: 'https://www.classnk.or.jp/hp/pdf/activities/statutory/isps/flag/marshall/isps_marshall_mi-118_202401.pdf',
+      name: 'RMI MI-118 - Seafarer Certification Requirements (PDF)',
+      type: 'pdf',
+      language: 'en'
+    },
+    {
+      url: 'https://www.cdinfo.lr.org/cdi/information/documents/countryfiles/Marshall%20Islands/MI_103_2021_amended.pdf',
+      name: 'RMI Yacht Code MI-103 (PDF)',
+      type: 'pdf',
+      language: 'en'
+    },
+    {
+      url: 'https://www.officialguidetoshipregistries.com/ogsr-ship-registries-database/marshall-islands',
+      name: 'Official Guide to Ship Registries - Marshall Islands',
+      type: 'html',
+      language: 'en'
+    },
+    {
+      url: 'https://oceanskies.com/guide/marshall-islands-yacht-registration/',
+      name: 'Ocean Skies - Marshall Islands Yacht Registration Guide',
+      type: 'html',
+      language: 'en'
+    }
+  ],
+
+  // ═══════════════════════════════════════════════════════════
+  // PAVILLONS OFFICIELS - MALTE (Commercial Yacht Code)
+  // CYC 2020, CYC 2025, yachts <24m
+  // ═══════════════════════════════════════════════════════════
+  PAVILLON_MALTA: [
+    {
+      url: 'https://www.transport.gov.mt/CYC-2020.pdf-f5742',
+      name: 'Malta CYC 2020 - Commercial Yacht Code (PDF)',
+      type: 'pdf',
+      language: 'en'
+    },
+    {
+      url: 'https://www.transport.gov.mt/COMMERCIAL-YACHT-CODE-Synopsis-of-key-elements.pdf-f2840',
+      name: 'Malta CYC - Synopsis of Key Elements (PDF)',
+      type: 'pdf',
+      language: 'en'
+    },
+    {
+      url: 'https://fff-legal.com/app/uploads/2025/06/CYC-2025-1.pdf',
+      name: 'Malta CYC 2025 (FFF Legal PDF)',
+      type: 'pdf',
+      language: 'en'
+    },
+    {
+      url: 'https://piazzalegal.net/yacht-registration-malta/f/commercial-yacht-code-for-yachts-under-24-metres',
+      name: 'Piazza Legal - CYC for Yachts Under 24 Metres',
+      type: 'html',
+      language: 'en'
+    }
+  ],
+
+  // ═══════════════════════════════════════════════════════════
+  // PAVILLONS OFFICIELS - CAYMAN / RED ENSIGN GROUP
+  // LY3, REG Yacht Code, guides pratiques
+  // ═══════════════════════════════════════════════════════════
+  PAVILLON_CAYMAN_REG: [
+    // LY3 - Large Commercial Yacht Code
+    {
+      url: 'https://www.cishipping.com/sites/default/files/others/Large%20Yacht%20Code%20(LY3)%20(2012).pdf',
+      name: 'LY3 - Large Commercial Yacht Code (CI Shipping PDF)',
+      type: 'pdf',
+      language: 'en'
+    },
+    {
+      url: 'https://www.gov.uk/government/publications/ly3-the-large-commercial-yacht-code',
+      name: 'UK MCA - LY3 Official Publication Page',
+      type: 'html',
+      language: 'en'
+    },
+    {
+      url: 'https://www.dohle-yachts.com/wp-content/uploads/2015/12/MSN-1851-The-Large-Commercial-Yacht-Code-LY3.pdf',
+      name: 'LY3 MSN 1851 (Dohle Yachts PDF)',
+      type: 'pdf',
+      language: 'en'
+    },
+    // REG Yacht Code (Red Ensign Group)
+    {
+      url: 'https://www.redensigngroup.org/media/yzlbtkyi/reg-yc-july-2024-edition-part-a.pdf',
+      name: 'REG Yacht Code July 2024 - Part A (PDF)',
+      type: 'pdf',
+      language: 'en'
+    },
+    // Guides Cayman
+    {
+      url: 'https://btmgroupci.com/news/how-to-register-a-yacht-with-the-cayman-islands-shipping-registry-a-step-by-step-guide',
+      name: 'BTM Group - How to Register a Yacht with Cayman Registry',
+      type: 'html',
+      language: 'en'
+    },
+    {
+      url: 'https://higgsjohnson.com/wp-content/uploads/2017/11/cayman-shipping-guide.pdf',
+      name: 'Higgs & Johnson - Cayman Shipping Guide (PDF)',
+      type: 'pdf',
+      language: 'en'
+    },
+    // Red Ensign Group général
+    {
+      url: 'https://oceanskies.com/guide/the-british-register-of-ships-the-red-ensign-group/',
+      name: 'Ocean Skies - British Register of Ships & Red Ensign Group',
+      type: 'html',
+      language: 'en'
+    }
+  ],
+
+  // ═══════════════════════════════════════════════════════════
+  // ÉQUIPAGE / MANNING / STCW / TRAVAIL MARITIME
+  // Certificats, FAQ, flags of convenience, droit du travail
+  // ═══════════════════════════════════════════════════════════
+  MANNING_STCW: [
+    // STCW / Certificats Marshall Islands
+    {
+      url: 'https://professionalyachttraining.com/announcements/marshall-islands-certification-faqs',
+      name: 'Professional Yacht Training - Marshall Islands 350GT/500GT Certification FAQs',
+      type: 'html',
+      language: 'en'
+    },
+    // Flags of convenience / Droit du travail
+    {
+      url: 'https://nautilusshipping.com/news-and-insights/flag-of-convenience-understanding-vessel-registration-and-the-flags-commonly-used',
+      name: 'Nautilus Shipping - Flag of Convenience Explained',
+      type: 'html',
+      language: 'en'
+    },
+    {
+      url: 'https://www.rsijournal.eu/ARTICLES/December_2021/05.pdf',
+      name: 'RSI Journal - Open Registers & European Response (Academic PDF)',
+      type: 'pdf',
+      language: 'en'
+    },
+    {
+      url: 'https://windward.ai/glossary/flag-of-convenience/',
+      name: 'Windward AI - Flag of Convenience Definition',
+      type: 'html',
+      language: 'en'
+    }
+  ],
+
+  // ═══════════════════════════════════════════════════════════
+  // GUIDES SYNTHÈSE PAVILLONS / CHOIX DE PAVILLON
+  // Comparatifs, top registries, conseils
+  // ═══════════════════════════════════════════════════════════
+  GUIDES_PAVILLONS: [
+    {
+      url: 'https://nomadcapitalist.com/expat/lifestyle/ultimate-guide-yacht-registration/',
+      name: 'Nomad Capitalist - Ultimate Guide to Offshore Yacht Registration',
+      type: 'html',
+      language: 'en'
+    },
+    {
+      url: 'https://www.yachting-pages.com/listing/registration-classification-ism',
+      name: 'Yachting Pages - Registration, Classification & ISM',
+      type: 'html',
+      language: 'en'
+    },
+    {
+      url: 'https://yachtownership-solutions.com/en/news/how-to-choose-a-flag-for-a-super-yacht',
+      name: 'Yacht Ownership Solutions - How to Choose a Flag for a Superyacht',
+      type: 'html',
+      language: 'en'
+    },
+    {
+      url: 'https://btmgroupci.com/news/top-5-countries-to-register-your-superyacht-and-why-it-matters',
+      name: 'BTM Group - Top 5 Countries to Register Your Superyacht',
+      type: 'html',
+      language: 'en'
+    },
+    {
+      url: 'https://www.agplaw.com/top-10-jurisdictions-for-ship-registration/',
+      name: 'AGPLAW - Top 10 Jurisdictions for Ship Registration',
+      type: 'html',
+      language: 'en'
+    },
+    {
+      url: 'https://www.obmagazine.media/superyacht-registration/',
+      name: 'OB Magazine - Superyacht Registration Overview',
+      type: 'html',
+      language: 'en'
+    },
+    {
+      url: 'https://dixcartairmarine.com/yacht-registration/',
+      name: 'Dixcart Air Marine - Yacht Registration Guide (IoM, Malta, etc.)',
+      type: 'html',
+      language: 'en'
+    },
+    {
+      url: 'https://www.superyachtseurope.com/legal',
+      name: 'Superyachts Europe - Legal Information (Charter, Clauses)',
+      type: 'html',
+      language: 'en'
+    }
   ]
 }
 
@@ -408,16 +714,17 @@ export function getReferenceStats() {
   }
 }
 
-// Log stats au chargement
-if (require.main === module) {
+// Log stats au chargement (ES Module compatible)
+const isMainModule = import.meta.url === `file://${process.argv[1]}`
+if (isMainModule) {
   const stats = getReferenceStats()
-  console.log('📊 Statistiques Documents de Référence')
-  console.log('─'.repeat(50))
+  console.log('Statistiques Documents de Reference')
+  console.log('-'.repeat(50))
   console.log(`Total: ${stats.totalDocuments} documents`)
   console.log(`  - PDFs: ${stats.totalPDFs}`)
   console.log(`  - Pages HTML: ${stats.totalHTML}`)
-  console.log(`  - Catégories: ${stats.categories}`)
-  console.log('\nPar catégorie:')
+  console.log(`  - Categories: ${stats.categories}`)
+  console.log('\nPar categorie:')
   for (const [cat, count] of Object.entries(stats.breakdown)) {
     console.log(`  - ${cat}: ${count} documents`)
   }

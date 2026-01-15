@@ -9,6 +9,7 @@
     "lint": "next lint",
     "ingest:all": "dotenv -e .env.local -- tsx scripts/ingest-reference-docs.ts",
     "ingest:category": "dotenv -e .env.local -- tsx scripts/ingest-reference-docs.ts",
+    "ingest:new": "dotenv -e .env.local -- tsx scripts/ingest-new-categories.ts",
     "ingest:verify": "dotenv -e .env.local -- tsx scripts/verify-ingestion.ts",
     "agent:create-key": "dotenv -e .env.local -- tsx scripts/create-agent-key.ts"
   },
