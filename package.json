@@ -13,6 +13,7 @@
     "ingest:radiation": "dotenv -e .env.local -- tsx scripts/add-new-radiation-sources.ts",
     "ingest:verify": "dotenv -e .env.local -- tsx scripts/verify-ingestion.ts",
     "db:migrate-013": "dotenv -e .env.local -- tsx scripts/apply-migration-013.ts",
+    "test:function": "dotenv -e .env.local -- tsx scripts/test-supabase-function.ts",
     "agent:create-key": "dotenv -e .env.local -- tsx scripts/create-agent-key.ts"
   },
   "dependencies": {
