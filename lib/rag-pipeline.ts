@@ -20,6 +20,7 @@ export type RelevantChunk = {
   similarity: number
   pageNumber: number | null
   chunkIndex: number
+  sourceUrl?: string
 }
 
 type SearchDocumentsRow = {
@@ -31,6 +32,7 @@ type SearchDocumentsRow = {
   similarity: number
   page_number: number | null
   chunk_index: number
+  source_url?: string
 }
 
 /**
@@ -75,7 +77,8 @@ export async function retrieveRelevantChunks(
       chunkText: row.chunk_text,
       similarity: row.similarity,
       pageNumber: row.page_number,
-      chunkIndex: row.chunk_index
+      chunkIndex: row.chunk_index,
+      sourceUrl: row.source_url
     }))
 
     return chunks

@@ -27,13 +27,19 @@ export default function Navbar() {
               href="/chat"
               className={`hover:text-luxury-gold-500 transition ${isActive('/chat') ? 'text-luxury-gold-500 font-semibold' : ''}`}
             >
-              Chat
+              💬 Chat
+            </Link>
+            <Link
+              href="/sources"
+              className={`hover:text-luxury-gold-500 transition ${isActive('/sources') ? 'text-luxury-gold-500 font-semibold' : ''}`}
+            >
+              📚 Sources
             </Link>
             <Link
               href="/documents"
               className={`hover:text-luxury-gold-500 transition ${isActive('/documents') ? 'text-luxury-gold-500 font-semibold' : ''}`}
             >
-              Documents
+              📄 Documents
             </Link>
             <div className="text-sm opacity-75">
               Beta v1.0

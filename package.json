@@ -10,7 +10,9 @@
     "ingest:all": "dotenv -e .env.local -- tsx scripts/ingest-reference-docs.ts",
     "ingest:category": "dotenv -e .env.local -- tsx scripts/ingest-reference-docs.ts",
     "ingest:new": "dotenv -e .env.local -- tsx scripts/ingest-new-categories.ts",
+    "ingest:radiation": "dotenv -e .env.local -- tsx scripts/add-new-radiation-sources.ts",
     "ingest:verify": "dotenv -e .env.local -- tsx scripts/verify-ingestion.ts",
+    "db:migrate-013": "dotenv -e .env.local -- tsx scripts/apply-migration-013.ts",
     "agent:create-key": "dotenv -e .env.local -- tsx scripts/create-agent-key.ts"
   },
   "dependencies": {

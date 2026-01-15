@@ -71,7 +71,12 @@ export async function POST(req: NextRequest) {
 
     // Step 2: Generate answer with Gemini + Grounding
     const context = formatChunksForContext(chunks)
-    const { answer, groundingMetadata } = await generateAnswer(message, context, undefined)
+    const contextMetadata = chunks.map(c => ({
+      document_name: c.documentName,
+      category: c.category,
+      source_url: c.sourceUrl
+    }))
+    const { answer, sources: geminiSources, groundingMetadata } = await generateAnswer(message, context, undefined, contextMetadata)
 
     // Extract web sources from grounding metadata
     const webSources = (groundingMetadata?.webSearchQueries as Array<{ searchQuery?: string; url?: string }> | undefined)?.map((query, idx: number) => ({
@@ -144,15 +149,15 @@ export async function POST(req: NextRequest) {
       userAgent: req.headers.get('user-agent') || undefined
     })
 
-    // Step 5: Combine internal docs + web sources
-    const internalSources = chunks.map(c => ({
-      documentName: c.documentName,
-      category: c.category,
-      similarity: Math.round(c.similarity * 100),
-      pageNumber: c.pageNumber
+    // Step 5: Combine Gemini sources + web sources
+    const formattedSources = geminiSources.map(s => ({
+      documentName: s.name,
+      category: s.category,
+      url: s.url,
+      similarity: 95 // High confidence for used sources
     }))
 
-    const allSources = [...internalSources, ...webSources]
+    const allSources = [...formattedSources, ...webSources]
 
     // Step 6: Return response
     return NextResponse.json({
