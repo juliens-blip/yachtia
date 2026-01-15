@@ -16,7 +16,7 @@ export default function SourcesPage() {
             📚 Base Documentaire
           </h1>
           <p className="text-gray-600 dark:text-gray-400">
-            Explorez toutes les sources juridiques disponibles pour l'assistant IA
+            Explorez toutes les sources juridiques disponibles pour l&apos;assistant IA
           </p>
         </div>
 

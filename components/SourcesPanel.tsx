@@ -232,7 +232,7 @@ export default function SourcesPanel() {
 
       {filteredCategories.length === 0 && (
         <div className="text-center py-12 text-gray-500 dark:text-gray-400">
-          Aucune source trouvée pour "{searchTerm}" dans {selectedCategory || 'toutes les catégories'}
+          Aucune source trouvée pour &quot;{searchTerm}&quot; dans {selectedCategory || 'toutes les catégories'}
         </div>
       )}
     </div>
