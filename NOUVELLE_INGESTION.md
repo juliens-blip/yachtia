@@ -178,6 +178,17 @@ Checklist :
 - 🇲🇹 [Malta CYC 2025](https://fff-legal.com/app/uploads/2025/06/CYC-2025-1.pdf)
 - 🇰🇾 [REG Yacht Code 2024](https://www.redensigngroup.org/media/yzlbtkyi/reg-yc-july-2024-edition-part-a.pdf)
 - 🇲🇭 [Marshall MI-100](https://www.register-iri.com/wp-content/uploads/MI-100.pdf)
+- 🇲🇭 [Marshall MI-103 Yacht Code (amended 2023)](https://www.register-iri.com/wp-content/uploads/MI-103-2021.pdf)
+- 🇲🇭 [Marshall MI-107 Maritime Act](https://www.register-iri.com/wp-content/uploads/MI-107.pdf)
+- 🇲🇭 [RMI Eligibility](https://www.register-iri.com/maritime/vessel-registration/eligibility/)
+- 🇲🇹 [Malta Merchant Shipping Act (Cap 234)](https://www.transport.gov.mt/Merchant-Shipping-Act.pdf-f10740)
+- 🇲🇹 [Malta Registration Process](https://www.transport.gov.mt/maritime/ship-and-yacht-registry/ship-registration/registration-process-127)
+- 🇰🇾 [Cayman Registration Guide (Stuart's Law)](https://www.stuartslaw.com/cms/document/vessel-registration-in-the-cayman-islands.pdf)
+- 🇲🇨 [Monaco Registry (Officiel)](https://monservicepublic.gouv.mc/en/themes/transport-and-mobility/boats-and-aircrafts/registration/how-to-register-a-boat-under-the-monegasque-flag)
+- 🇧🇸 [Bahamas Boat Regulations](https://www.bahamas.com/getting-here/boating/boat-regulations)
+- 🇧🇸 [Bahamas Yacht Registration (BMA)](https://www.bahamasmaritime.com/services/yacht-registration/register-a-yacht-in-the-bahamas/)
+- 🇻🇬 [BVI Eligible Jurisdictions](https://bvimaritime.vg/REGISTRATION/List-of-Jurisdictions-Eligible)
+- 🏝️ [IMO Party Addresses (IoM contacts)](https://wwwcdn.imo.org/localresources/en/OurWork/HumanElement/Documents/rptPartyAddresses.pdf)
 
 ### Guides Juridiques Spécialisés
 - 🇫🇷 [Radiation France](https://www.marine-administration.fr/radiation)
