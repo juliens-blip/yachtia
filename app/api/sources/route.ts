@@ -52,11 +52,18 @@ export async function GET(req: NextRequest) {
       )
     }
 
-    return NextResponse.json({
-      documents: grouped,
-      stats,
-      timestamp: new Date().toISOString()
-    })
+    return NextResponse.json(
+      {
+        documents: grouped,
+        stats,
+        timestamp: new Date().toISOString()
+      },
+      {
+        headers: {
+          'Cache-Control': 'no-store, max-age=0'
+        }
+      }
+    )
 
   } catch (error: unknown) {
     console.error('Sources API error:', error)
@@ -67,7 +74,12 @@ export async function GET(req: NextRequest) {
         error: 'Failed to fetch sources',
         details: process.env.NODE_ENV === 'development' ? message : undefined
       },
-      { status: 500 }
+      {
+        status: 500,
+        headers: {
+          'Cache-Control': 'no-store, max-age=0'
+        }
+      }
     )
   }
 }
