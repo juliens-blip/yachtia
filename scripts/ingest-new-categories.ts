@@ -32,7 +32,10 @@ const NEW_CATEGORIES = [
   'PAVILLON_MALTA',
   'PAVILLON_CAYMAN_REG',
   'MANNING_STCW',
-  'GUIDES_PAVILLONS'
+  'GUIDES_PAVILLONS',
+  'MLC_2006',
+  'YET',
+  'PAVILLONS'
 ]
 
 // Configuration
@@ -55,17 +58,36 @@ function sleep(ms: number): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, ms))
 }
 
+function sanitizeText(input: string): string {
+  return input
+    .replace(/\u0000/g, '')
+    .replace(/[\uD800-\uDFFF]/g, '')
+}
+
 /**
  * Verifie si un document existe deja dans la base
  */
-async function documentExists(url: string): Promise<boolean> {
+async function getExistingDocumentInfo(url: string): Promise<{ id: string; hasChunks: boolean } | null> {
   const { data } = await supabaseAdmin
     .from('documents')
     .select('id')
     .or(`file_url.eq.${url},source_url.eq.${url}`)
     .limit(1)
 
-  return data !== null && data.length > 0
+  if (!data || data.length === 0) {
+    return null
+  }
+
+  const documentId = data[0].id as string
+  const { count } = await supabaseAdmin
+    .from('document_chunks')
+    .select('id', { count: 'exact', head: true })
+    .eq('document_id', documentId)
+
+  return {
+    id: documentId,
+    hasChunks: (count ?? 0) > 0
+  }
 }
 
 /**
@@ -78,10 +100,16 @@ async function ingestDocument(
 ): Promise<{ success: boolean; chunks: number; skipped: boolean }> {
   try {
     // Check if already exists
-    if (await documentExists(doc.url)) {
+    const existing = await getExistingDocumentInfo(doc.url)
+    if (existing?.hasChunks) {
       console.log(`   [SKIP] Document deja present: ${doc.name}`)
       stats.skipped++
       return { success: true, chunks: 0, skipped: true }
+    }
+
+    if (existing && !existing.hasChunks) {
+      console.log(`   [RETRY] Document sans chunks, reingestion: ${doc.name}`)
+      await supabaseAdmin.from('documents').delete().eq('id', existing.id)
     }
 
     console.log(`\n[${category}] ${doc.name}`)
@@ -102,8 +130,11 @@ async function ingestDocument(
       console.log(`   HTML: article scrape`)
     }
 
+    text = sanitizeText(text)
+
     if (!text || text.length < 100) {
-      throw new Error('Texte trop court (< 100 chars)')
+      console.warn('   ⚠️  Texte trop court, insertion avec placeholder')
+      text = `${doc.name}\nSource: ${doc.url}\n[PDF content not extractable]`
     }
 
     console.log(`   Texte: ${text.length} caracteres`)
@@ -216,6 +247,9 @@ async function ingestDocument(
  * Main
  */
 async function main() {
+  const args = process.argv.slice(2).map(arg => arg.trim()).filter(Boolean)
+  const categoriesToIngest = args.length > 0 ? args : NEW_CATEGORIES
+
   console.log('=' .repeat(60))
   console.log('  INGESTION DES NOUVELLES CATEGORIES')
   console.log('=' .repeat(60))
@@ -223,11 +257,13 @@ async function main() {
   console.log('Categories a ingerer:')
 
   let totalDocs = 0
-  for (const cat of NEW_CATEGORIES) {
+  for (const cat of categoriesToIngest) {
     const docs = REFERENCE_DOCS[cat]
     if (docs) {
       console.log(`  - ${cat}: ${docs.length} documents`)
       totalDocs += docs.length
+    } else {
+      console.warn(`  - ${cat}: categorie inconnue`)
     }
   }
   console.log(`\nTotal: ${totalDocs} documents a traiter`)
@@ -235,7 +271,7 @@ async function main() {
 
   stats.startTime = Date.now()
 
-  for (const category of NEW_CATEGORIES) {
+  for (const category of categoriesToIngest) {
     const docs = REFERENCE_DOCS[category]
 
     if (!docs) {

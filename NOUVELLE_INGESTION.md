@@ -185,16 +185,27 @@ Checklist :
 - 🇲🇹 [Malta Registration Process](https://www.transport.gov.mt/maritime/ship-and-yacht-registry/ship-registration/registration-process-127)
 - 🇰🇾 [Cayman Registration Guide (Stuart's Law)](https://www.stuartslaw.com/cms/document/vessel-registration-in-the-cayman-islands.pdf)
 - 🇲🇨 [Monaco Registry (Officiel)](https://monservicepublic.gouv.mc/en/themes/transport-and-mobility/boats-and-aircrafts/registration/how-to-register-a-boat-under-the-monegasque-flag)
+- 🇲🇨 [Ports de Monaco - Monaco Best of Yachting 2023](https://www.ports-monaco.com/wp-content/uploads/2023/05/monaco-best-of-yachting-2023.pdf)
 - 🇧🇸 [Bahamas Boat Regulations](https://www.bahamas.com/getting-here/boating/boat-regulations)
 - 🇧🇸 [Bahamas Yacht Registration (BMA)](https://www.bahamasmaritime.com/services/yacht-registration/register-a-yacht-in-the-bahamas/)
 - 🇻🇬 [BVI Eligible Jurisdictions](https://bvimaritime.vg/REGISTRATION/List-of-Jurisdictions-Eligible)
 - 🏝️ [IMO Party Addresses (IoM contacts)](https://wwwcdn.imo.org/localresources/en/OurWork/HumanElement/Documents/rptPartyAddresses.pdf)
+- 🇰🇾 [OGSR Cayman Islands (REG Cat 1)](https://www.officialguidetoshipregistries.com/ogsr-ship-registries-database/cayman-islands-%28red-ensign-group-cat-1%29)
 
 ### Guides Juridiques Spécialisés
 - 🇫🇷 [Radiation France](https://www.marine-administration.fr/radiation)
 - 🇫🇷 [Changement pavillon](https://bateaux-services.com/changement-de-pavillon/)
 - 🇲🇹 [Malta Closure Registry](https://www.transport.gov.mt/maritime/ship-and-yacht-registry/ship-registration/closure-of-registry-130)
 - 🇰🇾 [Cayman Deletion 2020](https://www.cishipping.com/sites/default/files/Checklist%20Deletion%20of%20a%20Vessel%20FINAL%2025NOV2020_0.pdf)
+- 🇫🇷 [RIF - Choose France with the RIF (Flyer)](https://www.rif.mer.gouv.fr/IMG/pdf/choose_france_with_the_rif_for_your_commercial_yacht_-_flyer_2023.pdf)
+- 🇫🇷 [RIF - Attractive Tax System](https://www.rif.mer.gouv.fr/attractive-tax-system-for-shipowners-and-seafarers-a586.html?lang=en)
+- 🇪🇸 [Spain Charter Tax & Cabotage](https://www.der-yacht-anwalt.de/en/service-for-yacht-owners/yacht-charter-spain-12-matriculation-tax/)
+- 🇪🇺 [EU VAT Challenge (Italy/Cyprus)](https://marosavat.com/vat-news/eu-challenges-italy-and-cyprus-for-their-vat-rules-on-chartering)
+- 🇪🇺 [VAT on Yacht Charters (EU rates)](https://www.yourboatholiday.com/the-ultimate-guide-to-vat-on-yacht-charters/)
+- 📄 [MYBA - Press & Documents](https://www.myba-association.com/en/myba-press-and-documents.cfm)
+- 📄 [MYBA - Captains & Crew Guide](https://www.myba-association.com/files/index.cfm?id=481&crypt=418013)
+- 📄 [MYBA - Internal Rules & Regulations](https://www.myba-association.com/files/index.cfm?id=484&crypt=945943)
+- 📄 [MYBA 2025 E-Charter Draft](https://ionian-ray.com/wp-content/uploads/2025/04/MYBA-2025-E-Charter-DRAFT.pdf)
 
 ## ✅ Résultat Final
 

@@ -17,6 +17,24 @@ export const REFERENCE_DOCS: Record<string, ReferenceDocument[]> = {
   // ═══════════════════════════════════════════════════════════
   MYBA: [
     {
+      url: 'https://www.myba-association.com/en/myba-press-and-documents.cfm',
+      name: 'MYBA - Press & Documents (Official)',
+      type: 'html',
+      language: 'en'
+    },
+    {
+      url: 'https://www.myba-association.com/files/index.cfm?id=481&crypt=418013',
+      name: 'MYBA - Information for Charter Yacht Captains & Crew (PDF)',
+      type: 'pdf',
+      language: 'en'
+    },
+    {
+      url: 'https://www.myba-association.com/files/index.cfm?id=484&crypt=945943',
+      name: 'MYBA - Internal Rules & Regulations (PDF)',
+      type: 'pdf',
+      language: 'en'
+    },
+    {
       url: 'https://www.charteranddreams.com/wp-content/uploads/2024/06/SPECIMEN-MYBA-2017-E-Contract-original-V9.1b.pdf',
       name: 'MYBA 2017 E-Contract Specimen (V9.1b)',
       type: 'pdf',
@@ -62,6 +80,24 @@ export const REFERENCE_DOCS: Record<string, ReferenceDocument[]> = {
       url: 'https://www.yourboatholiday.com/the-complete-guide-to-the-myba-e-contract/',
       name: 'Your Boat Holiday - Complete Guide to MYBA E-Contract',
       type: 'html',
+      language: 'en'
+    },
+    {
+      url: 'https://www.ypicrew.com/the-myba-charter-agreement-download-a-free-guide-for-yacht-captains',
+      name: 'YPI Crew + Hill Dickinson - Free Guide to the MYBA Charter Agreement',
+      type: 'html',
+      language: 'en'
+    },
+    {
+      url: 'https://yacht-scuderia.com/wp-content/uploads/2014/12/Charter-MYBA-FR.pdf',
+      name: 'MYBA Charter Agreement Specimen (French PDF)',
+      type: 'pdf',
+      language: 'fr'
+    },
+    {
+      url: 'https://ionian-ray.com/wp-content/uploads/2025/04/MYBA-2025-E-Charter-DRAFT.pdf',
+      name: 'MYBA 2025 E-Charter Draft (PDF)',
+      type: 'pdf',
       language: 'en'
     },
     {
@@ -158,6 +194,24 @@ export const REFERENCE_DOCS: Record<string, ReferenceDocument[]> = {
     {
       url: 'https://www.praxisgroup.com/news-insights/insights/essential-criteria-for-eu-charter-yacht-operation/',
       name: 'Praxis Group - EU Charter Yacht Operation Essentials',
+      type: 'html',
+      language: 'en'
+    },
+    {
+      url: 'https://www.der-yacht-anwalt.de/en/service-for-yacht-owners/yacht-charter-spain-12-matriculation-tax/',
+      name: 'Der Yacht Anwalt - Yacht Charter Spain (Matriculation Tax, Cabotage, VAT)',
+      type: 'html',
+      language: 'en'
+    },
+    {
+      url: 'https://marosavat.com/vat-news/eu-challenges-italy-and-cyprus-for-their-vat-rules-on-chartering',
+      name: 'Marosa VAT - EU Challenges Italy and Cyprus VAT Rules on Chartering',
+      type: 'html',
+      language: 'en'
+    },
+    {
+      url: 'https://www.yourboatholiday.com/the-ultimate-guide-to-vat-on-yacht-charters/',
+      name: 'Your Boat Holiday - Ultimate Guide to VAT on Yacht Charters (EU rates)',
       type: 'html',
       language: 'en'
     }
@@ -293,6 +347,18 @@ export const REFERENCE_DOCS: Record<string, ReferenceDocument[]> = {
     {
       url: 'https://www.yachter.fr/en/laws-orders-regulations/discover-the-r-i-f-registre-international-francais/',
       name: 'The Yachter - RIF (Registre International Français)',
+      type: 'html',
+      language: 'en'
+    },
+    {
+      url: 'https://www.rif.mer.gouv.fr/IMG/pdf/choose_france_with_the_rif_for_your_commercial_yacht_-_flyer_2023.pdf',
+      name: 'RIF - Choose France with the RIF for your Commercial Yacht (Flyer PDF)',
+      type: 'pdf',
+      language: 'en'
+    },
+    {
+      url: 'https://www.rif.mer.gouv.fr/attractive-tax-system-for-shipowners-and-seafarers-a586.html?lang=en',
+      name: 'RIF - Attractive Tax System for Shipowners and Seafarers (Official)',
       type: 'html',
       language: 'en'
     },
