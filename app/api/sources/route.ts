@@ -10,6 +10,18 @@ import { supabaseAdmin } from '@/lib/supabase'
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
 
+function getSupabaseProjectRef() {
+  const url = process.env.SUPABASE_URL
+  if (!url) return null
+  try {
+    const host = new URL(url).host
+    const ref = host.split('.')[0]
+    return ref || null
+  } catch {
+    return null
+  }
+}
+
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url)
@@ -56,6 +68,7 @@ export async function GET(req: NextRequest) {
       {
         documents: grouped,
         stats,
+        supabaseProjectRef: getSupabaseProjectRef(),
         timestamp: new Date().toISOString()
       },
       {
