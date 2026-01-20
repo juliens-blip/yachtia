@@ -11,12 +11,22 @@ export const dynamic = 'force-dynamic'
 export const revalidate = 0
 
 function getSupabaseProjectRef() {
-  const url = process.env.SUPABASE_URL
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL
   if (!url) return null
   try {
     const host = new URL(url).host
     const ref = host.split('.')[0]
     return ref || null
+  } catch {
+    return null
+  }
+}
+
+function getSupabaseUrlHost() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL
+  if (!url) return null
+  try {
+    return new URL(url).host
   } catch {
     return null
   }
@@ -69,6 +79,7 @@ export async function GET(req: NextRequest) {
         documents: grouped,
         stats,
         supabaseProjectRef: getSupabaseProjectRef(),
+        supabaseUrlHost: getSupabaseUrlHost(),
         timestamp: new Date().toISOString()
       },
       {
