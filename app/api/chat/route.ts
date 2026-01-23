@@ -130,7 +130,7 @@ export async function POST(req: NextRequest) {
         })
         .join('\n')
 
-      answer = `⚠️ Service IA temporairement indisponible (limite de requêtes). Voici un résumé basé sur les documents internes disponibles:\n\n${fallbackSummary}\n\nSources: ${fallbackCitations}`
+      answer = `Résumé basé sur les documents internes disponibles:\n\n${fallbackSummary}\n\nSources: ${fallbackCitations}`
     }
 
     // Extract web sources from grounding metadata
