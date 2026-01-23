@@ -70,7 +70,7 @@ export async function retrieveRelevantChunks(
       const { data, error } = await supabaseAdmin.rpc('search_documents', params)
 
       if (error && error.code === 'PGRST202' && 'use_reranking' in params) {
-        const { use_reranking, ...fallbackParams } = params
+        const { use_reranking: _unused, ...fallbackParams } = params
         const retry = await supabaseAdmin.rpc('search_documents', fallbackParams)
         return retry
       }
