@@ -7,6 +7,8 @@
  */
 
 import { GoogleGenerativeAI } from '@google/generative-ai'
+import PQueue from 'p-queue'
+import crypto from 'crypto'
 import { logGeminiInteraction, extractCitations, detectInternetFallback } from './gemini-logger'
 
 // Validate API key
@@ -15,6 +17,46 @@ if (!process.env.GEMINI_API_KEY) {
 }
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY)
+
+const geminiQueue = new PQueue({
+  concurrency: 1,
+  interval: 1000,
+  intervalCap: 1
+})
+
+const CACHE_TTL_MS = 10 * 60 * 1000
+const answerCache = new Map<string, { value: { answer: string; sources: SourceReference[]; groundingMetadata?: Record<string, unknown> }; expiresAt: number }>()
+const inFlight = new Map<string, Promise<{ answer: string; sources: SourceReference[]; groundingMetadata?: Record<string, unknown> }>>()
+
+function buildCacheKey(
+  question: string,
+  context: string[],
+  contextMetadata?: Array<{ document_name: string; category: string; source_url?: string }>
+): string {
+  const payload = JSON.stringify({
+    q: question,
+    c: context,
+    m: contextMetadata || []
+  })
+  return crypto.createHash('sha256').update(payload).digest('hex')
+}
+
+function getCachedAnswer(key: string) {
+  const entry = answerCache.get(key)
+  if (!entry) return null
+  if (entry.expiresAt < Date.now()) {
+    answerCache.delete(key)
+    return null
+  }
+  return entry.value
+}
+
+function setCachedAnswer(
+  key: string,
+  value: { answer: string; sources: SourceReference[]; groundingMetadata?: Record<string, unknown> }
+) {
+  answerCache.set(key, { value, expiresAt: Date.now() + CACHE_TTL_MS })
+}
 
 /**
  * Generate embedding vector for text (768 dimensions)
@@ -61,6 +103,17 @@ export async function generateAnswer(
   contextMetadata?: Array<{ document_name: string; category: string; source_url?: string }>
 ): Promise<{ answer: string; sources: SourceReference[]; groundingMetadata?: Record<string, unknown> }> {
   try {
+    const cacheKey = buildCacheKey(question, context, contextMetadata)
+    const cached = getCachedAnswer(cacheKey)
+    if (cached) {
+      return cached
+    }
+
+    const inFlightPromise = inFlight.get(cacheKey)
+    if (inFlightPromise) {
+      return await inFlightPromise
+    }
+
     const fastMode = process.env.RAG_FAST_MODE === '1'
     // Use gemini-2.0-flash with optional grounding
     // Note: googleSearch tool requires specific API config
@@ -271,7 +324,7 @@ STYLE PROFESSIONNEL REQUIS
       const delays = [2000, 4000, 8000]
       for (let attempt = 0; attempt <= delays.length; attempt++) {
         try {
-          return await chat.sendMessage(prompt)
+          return await geminiQueue.add(() => chat.sendMessage(prompt))
         } catch (error) {
           const status = (error as { status?: number })?.status
           const message = error instanceof Error ? error.message : String(error)
@@ -279,87 +332,93 @@ STYLE PROFESSIONNEL REQUIS
           if (!isRateLimit || attempt === delays.length) {
             throw error
           }
-          await new Promise(resolve => setTimeout(resolve, delays[attempt]))
+          const jitter = Math.floor(Math.random() * 300)
+          await new Promise(resolve => setTimeout(resolve, delays[attempt] + jitter))
         }
       }
       throw new Error('Gemini request failed after retries')
     }
 
-    const result = await runWithRetry()
-    const response = result.response
-
-    // Extract grounding metadata if available
-    const groundingMetadata = (response as unknown as { groundingMetadata?: Record<string, unknown> }).groundingMetadata || undefined
-
-    // Extract unique sources from context metadata
-    const sources: SourceReference[] = []
-    if (contextMetadata && contextMetadata.length > 0) {
-      const seenSources = new Set<string>()
-      contextMetadata.forEach(meta => {
-        const key = `${meta.document_name}::${meta.category}`
-        if (!seenSources.has(key)) {
-          seenSources.add(key)
-          sources.push({
-            name: meta.document_name,
-            category: meta.category,
-            url: meta.source_url
-          })
-        }
-      })
-    }
-
-    let answerText = response.text()
-
-    if (context.length > 0) {
-      answerText = answerText
-        .replace(/\[Web:[^\]]+\]\s*/gi, '')
-        .replace(/https?:\/\/\S+/gi, '')
-        .replace(/sources?\s+web/gi, 'sources')
-        .replace(/recherche\s+web/gi, 'recherche')
-
+    const generatedPromise = (async () => {
+      const result = await runWithRetry()
+      const response = result.response
+      const groundingMetadata = (response as unknown as { groundingMetadata?: Record<string, unknown> }).groundingMetadata || undefined
+      const sources: SourceReference[] = []
       if (contextMetadata && contextMetadata.length > 0) {
-        const existingCitations = answerText.match(/\[(Doc|Source|Document):[^\]]+\]/gi) || []
-        const uniqueSources = Array.from(
-          new Map(
-            contextMetadata.map(meta => [
-              `${meta.document_name}::${meta.category}`,
-              meta
-            ])
-          ).values()
-        )
-
-        const citationPool = uniqueSources.map(meta => `[Source: ${meta.document_name}, page 1]`)
-        const citationsToAdd = citationPool.filter(
-          citation => !existingCitations.some(existing => existing.toLowerCase() === citation.toLowerCase())
-        )
-
-        if (existingCitations.length < 3 && citationPool.length > 0) {
-          const needed = Math.max(0, 3 - existingCitations.length)
-          const extra: string[] = []
-          let idx = 0
-          while (extra.length < needed) {
-            const candidate = citationsToAdd[idx] || citationPool[idx % citationPool.length]
-            if (candidate) extra.push(candidate)
-            idx++
+        const seenSources = new Set<string>()
+        contextMetadata.forEach(meta => {
+          const key = `${meta.document_name}::${meta.category}`
+          if (!seenSources.has(key)) {
+            seenSources.add(key)
+            sources.push({
+              name: meta.document_name,
+              category: meta.category,
+              url: meta.source_url
+            })
           }
-          answerText = `${answerText}\n\nSources: ${extra.join(' ')}`
+        })
+      }
+      let answerText = response.text()
+      if (context.length > 0) {
+        answerText = answerText
+          .replace(/\[Web:[^\]]+\]\s*/gi, '')
+          .replace(/https?:\/\/\S+/gi, '')
+          .replace(/sources?\s+web/gi, 'sources')
+          .replace(/recherche\s+web/gi, 'recherche')
+
+        if (contextMetadata && contextMetadata.length > 0) {
+          const existingCitations = answerText.match(/\[(Doc|Source|Document):[^\]]+\]/gi) || []
+          const uniqueSources = Array.from(
+            new Map(
+              contextMetadata.map(meta => [
+                `${meta.document_name}::${meta.category}`,
+                meta
+              ])
+            ).values()
+          )
+
+          const citationPool = uniqueSources.map(meta => `[Source: ${meta.document_name}, page 1]`)
+          const citationsToAdd = citationPool.filter(
+            citation => !existingCitations.some(existing => existing.toLowerCase() === citation.toLowerCase())
+          )
+
+          if (existingCitations.length < 3 && citationPool.length > 0) {
+            const needed = Math.max(0, 3 - existingCitations.length)
+            const extra: string[] = []
+            let idx = 0
+            while (extra.length < needed) {
+              const candidate = citationsToAdd[idx] || citationPool[idx % citationPool.length]
+              if (candidate) extra.push(candidate)
+              idx++
+            }
+            answerText = `${answerText}\n\nSources: ${extra.join(' ')}`
+          }
         }
       }
-    }
-    
-    logGeminiInteraction({
-      question,
-      chunksProvided: effectiveContext.length,
-      chunksPreviews: effectiveContext.slice(0, 3).map(c => c.substring(0, 100)),
-      response: answerText,
-      sourcesCited: extractCitations(answerText),
-      usedInternet: detectInternetFallback(answerText)
-    })
 
-    return {
-      answer: answerText,
-      sources,
-      groundingMetadata
+      logGeminiInteraction({
+        question,
+        chunksProvided: effectiveContext.length,
+        chunksPreviews: effectiveContext.slice(0, 3).map(c => c.substring(0, 100)),
+        response: answerText,
+        sourcesCited: extractCitations(answerText),
+        usedInternet: detectInternetFallback(answerText)
+      })
+
+      return {
+        answer: answerText,
+        sources,
+        groundingMetadata
+      }
+    })()
+
+    inFlight.set(cacheKey, generatedPromise)
+    try {
+      const finalResult = await generatedPromise
+      setCachedAnswer(cacheKey, finalResult)
+      return finalResult
+    } finally {
+      inFlight.delete(cacheKey)
     }
   } catch (error) {
     console.error('Gemini generation error:', error)
