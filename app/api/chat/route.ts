@@ -100,7 +100,38 @@ export async function POST(req: NextRequest) {
       category: c.category,
       source_url: c.sourceUrl
     }))
-    const { answer, sources: geminiSources, groundingMetadata } = await generateAnswer(message, context, undefined, contextMetadata)
+    let answer: string
+    let geminiSources: Array<{ name: string; category: string; url?: string }> = []
+    let groundingMetadata: Record<string, unknown> | undefined
+
+    try {
+      const result = await generateAnswer(message, context, undefined, contextMetadata)
+      answer = result.answer
+      geminiSources = result.sources
+      groundingMetadata = result.groundingMetadata
+    } catch (error) {
+      const messageText = error instanceof Error ? error.message : String(error)
+      const isRateLimit = messageText.includes('429') || messageText.includes('Resource exhausted')
+
+      if (!isRateLimit) {
+        throw error
+      }
+
+      const fallbackCitations = chunks
+        .slice(0, 3)
+        .map(chunk => `[Source: ${chunk.documentName}, page ${chunk.pageNumber ?? 'N/A'}]`)
+        .join(' ')
+
+      const fallbackSummary = chunks
+        .slice(0, 3)
+        .map((chunk, index) => {
+          const preview = chunk.chunkText.replace(/\s+/g, ' ').slice(0, 220)
+          return `${index + 1}. ${preview}...`
+        })
+        .join('\n')
+
+      answer = `⚠️ Service IA temporairement indisponible (limite de requêtes). Voici un résumé basé sur les documents internes disponibles:\n\n${fallbackSummary}\n\nSources: ${fallbackCitations}`
+    }
 
     // Extract web sources from grounding metadata
     const webSources = (groundingMetadata?.webSearchQueries as Array<{ searchQuery?: string; url?: string }> | undefined)?.map((query, idx: number) => ({

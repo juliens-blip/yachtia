@@ -121,7 +121,35 @@ export async function POST(req: NextRequest) {
 
     // Generate answer with grounding
     const context = formatChunksForContext(chunks)
-    const { answer, groundingMetadata } = await generateAnswer(query, context, undefined)
+    let answer: string
+    let groundingMetadata: Record<string, unknown> | undefined
+
+    try {
+      const result = await generateAnswer(query, context, undefined)
+      answer = result.answer
+      groundingMetadata = result.groundingMetadata
+    } catch (error) {
+      const messageText = error instanceof Error ? error.message : String(error)
+      const isRateLimit = messageText.includes('429') || messageText.includes('Resource exhausted')
+      if (!isRateLimit) {
+        throw error
+      }
+
+      const fallbackCitations = chunks
+        .slice(0, 3)
+        .map(chunk => `[Source: ${chunk.documentName}, page ${chunk.pageNumber ?? 'N/A'}]`)
+        .join(' ')
+
+      const fallbackSummary = chunks
+        .slice(0, 3)
+        .map((chunk, index) => {
+          const preview = chunk.chunkText.replace(/\s+/g, ' ').slice(0, 220)
+          return `${index + 1}. ${preview}...`
+        })
+        .join('\n')
+
+      answer = `⚠️ Service IA temporairement indisponible (limite de requêtes). Voici un résumé basé sur les documents internes disponibles:\n\n${fallbackSummary}\n\nSources: ${fallbackCitations}`
+    }
 
     // Extract web sources from groundingChunks (P1 fix - was using webSearchQueries)
     interface GroundingChunk {
