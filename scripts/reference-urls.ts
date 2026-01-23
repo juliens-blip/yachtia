@@ -416,7 +416,7 @@ export const REFERENCE_DOCS: Record<string, ReferenceDocument[]> = {
       language: 'en'
     },
     {
-      url: 'https://www.etf-europe.org/wp-content/uploads/2022/03/Social-security-rights-of-the-European-resident-seafarers_ETF-WMU-joint-re.pdf',
+      url: 'https://www.etf-europe.org/wp-content/uploads/2022/03/Social-security-rights-of-the-European-resident-seafarers_ETF-WMU-joint-report-web.pdf',
       name: 'ETF/WMU - Social Security Rights of European Resident Seafarers (PDF)',
       type: 'pdf',
       language: 'en'
@@ -1200,9 +1200,9 @@ export const REFERENCE_DOCS: Record<string, ReferenceDocument[]> = {
       language: 'en'
     },
     {
-      url: 'https://pole-transports-facdedroit.univ-amu.fr/sites/pole-transports-facdedroit.univ-amu.fr/files/public/master_maritime_ramelet.pdf',
-      name: 'France/UK - Attractivite Pavillon Britannique Post-Brexit vs RIF (PDF)',
-      type: 'pdf',
+      url: 'https://r.jina.ai/http://wsimg.com/ozu-06k4brr6vwcfpz0zs2dtzactac2qisuhdrm7j7qmwrzh3ycnli2c7caq2xz4cr2rn34ck8i35q9uwdd5ad6bjm12oshbspeejpmmkj4fphjx3wijpdfslicw2iz/OHS2302_Memoire_Logistique_et_transport_LINON.pdf',
+      name: 'France/UK - Attractivite Pavillon Britannique Post-Brexit vs RIF (PDF via proxy)',
+      type: 'html',
       language: 'fr'
     }
   ],
@@ -1408,9 +1408,15 @@ export const REFERENCE_DOCS: Record<string, ReferenceDocument[]> = {
       language: 'en'
     },
     {
-      url: 'https://www.dpps-mlas.si/wp-content/uploads/2021/10/12.-Prof.-Dr.-Ranka-Petrinovic-Dr.-Vesna-Skorupan-Wolff-Yacht-Charter-Party-Agreement.pdf',
-      name: 'Croatia - Yacht Charter Party Agreement (Croatian Maritime Code) (PDF)',
+      url: 'https://hdpp.hr/wp-content/uploads/2021/03/4th-AMLC-Book-of-Abstracts-Portoroz-2019.pdf',
+      name: 'Croatia - Yacht Charter Party Agreement (Croatian Maritime Code) (Abstracts PDF)',
       type: 'pdf',
+      language: 'en'
+    },
+    {
+      url: 'https://www.croris.hr/dogadanja/dogadanje/79669',
+      name: 'Croatia - Yacht Charter Party Agreement (CroRIS entry)',
+      type: 'html',
       language: 'en'
     }
   ],
@@ -1421,15 +1427,15 @@ export const REFERENCE_DOCS: Record<string, ReferenceDocument[]> = {
   // ═══════════════════════════════════════════════════════════
   TURQUIE_BLUE_CARD: [
     {
-      url: 'https://aksoylaw.com/wp-content/uploads/2025/04/Aksoy-Law-April-2025-Blue-Card-System.pdf',
-      name: 'Turkey - Blue Card System in Turkish Yacht Law (Aksoy Law 2025 PDF)',
-      type: 'pdf',
+      url: 'https://r.jina.ai/http://aksoylaw.com/blue-card-system-in-turkish-yacht-law/',
+      name: 'Turkey - Blue Card System in Turkish Yacht Law (Aksoy Law via proxy)',
+      type: 'html',
       language: 'en'
     },
     {
-      url: 'http://www.skipperguru.ru/Files/Turkey_blue_card_regulation_rules.pdf',
-      name: 'Turkey - Blue Card Regulation Rules (PDF)',
-      type: 'pdf',
+      url: 'https://r.jina.ai/http://www.skipperguru.ru/Files/Turkey_blue_card_regulation_rules.pdf',
+      name: 'Turkey - Blue Card Regulation Rules (PDF via proxy)',
+      type: 'html',
       language: 'en'
     }
   ],
@@ -1471,9 +1477,9 @@ export const REFERENCE_DOCS: Record<string, ReferenceDocument[]> = {
       language: 'en'
     },
     {
-      url: 'https://amf.gov.al/pdf/ligje/Law%20on%20TPL.pdf',
-      name: 'Albania - Law on TPL Insurance (PDF)',
-      type: 'pdf',
+      url: 'https://r.jina.ai/http://www.albsig.al/en/motor-liability-insurance-tpl/',
+      name: 'Albania - TPL Insurance Overview (via proxy)',
+      type: 'html',
       language: 'en'
     }
   ],

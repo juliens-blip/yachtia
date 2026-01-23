@@ -93,7 +93,14 @@ export async function downloadPDF(url: string): Promise<Buffer> {
   try {
     console.log(`  📥 Downloading PDF ${url}...`)
 
-    const insecureHosts = new Set(['griffithsassoc.com'])
+    const insecureHosts = new Set(['griffithsassoc.com', 'www.mer.gouv.fr', 'mer.gouv.fr'])
+    const extraInsecure = (process.env.INSECURE_PDF_HOSTS || '')
+      .split(',')
+      .map(host => host.trim())
+      .filter(Boolean)
+    for (const host of extraInsecure) {
+      insecureHosts.add(host)
+    }
     const host = new URL(url).hostname
     const agent = insecureHosts.has(host)
       ? new https.Agent({ rejectUnauthorized: false })
@@ -104,6 +111,8 @@ export async function downloadPDF(url: string): Promise<Buffer> {
       headers: {
         'User-Agent': 'Mozilla/5.0 (compatible; YachtLegalAI/1.0; +https://yacht-legal-ai.vercel.app)',
         'Accept': 'application/pdf,application/octet-stream;q=0.9,*/*;q=0.8'
+        , 'Accept-Language': 'en-US,en;q=0.9,fr;q=0.8'
+        , 'Referer': `https://${host}/`
       }
     })
     

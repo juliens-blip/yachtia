@@ -28,14 +28,22 @@ import { supabaseAdmin } from '../lib/supabase'
 // Nouvelles categories a ingerer
 const NEW_CATEGORIES = [
   'DROIT_MER_INTERNATIONAL',
+  'DROIT_SOCIAL',
   'PAVILLON_MARSHALL',
   'PAVILLON_MALTA',
   'PAVILLON_CAYMAN_REG',
+  'PAVILLON_MADERE',
+  'PAVILLON_CHYPRE',
   'MANNING_STCW',
   'GUIDES_PAVILLONS',
   'MLC_2006',
   'YET',
-  'PAVILLONS'
+  'PAVILLONS',
+  'TVA_CHARTER_MED',
+  'CROATIE_CHARTER',
+  'TURQUIE_BLUE_CARD',
+  'MONTENEGRO_CLEARANCE',
+  'ALBANIE_REGS'
 ]
 
 // Configuration
