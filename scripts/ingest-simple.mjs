@@ -144,7 +144,7 @@ async function scrapeHTML(url) {
   return text
 }
 
-function chunkText(text, chunkSize = 500, overlap = 100) {
+function chunkText(text, chunkSize = 500, overlap = 200) {
   const words = text.split(/\s+/)
   const chunks = []
   
@@ -200,7 +200,7 @@ async function ingestDocument(doc, category) {
     console.log(`   💾 Document ID: ${document.id}`)
     
     // 3. Chunk text
-    const chunks = chunkText(text, 500, 100)
+    const chunks = chunkText(text, 500, 200)
     console.log(`   ✂️  ${chunks.length} chunks créés`)
     
     // 4. Generate embeddings (batch)

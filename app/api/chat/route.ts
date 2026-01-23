@@ -7,10 +7,11 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { retrieveRelevantChunks, formatChunksForContext, getUniqueDocumentIds } from '@/lib/rag-pipeline'
+import { retrieveRelevantChunks, formatChunksForContext, getUniqueDocumentIds, RelevantChunk } from '@/lib/rag-pipeline'
 import { generateAnswer } from '@/lib/gemini'
 import { logChatAudit } from '@/lib/audit-logger'
 import { supabaseAdmin } from '@/lib/supabase'
+import { expandQuery, deduplicateChunks } from '@/lib/question-processor'
 
 const MAX_REQUESTS_PER_MINUTE = parseInt(process.env.MAX_REQUESTS_PER_MINUTE || '10')
 
@@ -66,10 +67,33 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // Step 1: Retrieve relevant chunks via RAG
-    const chunks = await retrieveRelevantChunks(message, category, 5, 0.7)
+    // Step 1: Expand query with variants and keywords
+    const expanded = await expandQuery(message)
+    console.log('[RAG] Query expansion:', {
+      original: expanded.original,
+      variants: expanded.variants.length,
+      keywords: expanded.keywords.slice(0, 5)
+    })
 
-    // Step 2: Generate answer with Gemini + Grounding
+    // Step 2: Retrieve chunks with original + variants
+    const allChunkResults = await Promise.all([
+      retrieveRelevantChunks(expanded.original, category, 5, 0.7),
+      ...expanded.variants.map(v => retrieveRelevantChunks(v, category, 3, 0.7))
+    ])
+    
+    // Deduplicate and merge chunks
+    const allChunks = allChunkResults.flat()
+    const chunks = deduplicateChunks(
+      allChunks.map(c => ({ ...c, id: c.chunkId }))
+    ).slice(0, 8) as RelevantChunk[]
+    
+    console.log('[RAG] Chunks retrieved:', {
+      total: allChunks.length,
+      unique: chunks.length,
+      topSimilarity: chunks[0]?.similarity || 0
+    })
+
+    // Step 3: Generate answer with Gemini + Grounding
     const context = formatChunksForContext(chunks)
     const contextMetadata = chunks.map(c => ({
       document_name: c.documentName,

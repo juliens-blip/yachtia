@@ -524,7 +524,7 @@ async function ingestSource(source: NewSource): Promise<boolean> {
     console.log(`   💾 Document ID: ${document.id}`)
     
     // Chunk
-    const chunks = chunkText(text, 500, 100)
+    const chunks = chunkText(text, 500, 200)
     console.log(`   ✂️  ${chunks.length} chunks`)
     
     if (chunks.length === 0) {

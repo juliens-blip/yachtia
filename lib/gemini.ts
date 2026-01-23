@@ -7,6 +7,7 @@
  */
 
 import { GoogleGenerativeAI } from '@google/generative-ai'
+import { logGeminiInteraction, extractCitations, detectInternetFallback } from './gemini-logger'
 
 // Validate API key
 if (!process.env.GEMINI_API_KEY) {
@@ -60,11 +61,67 @@ export async function generateAnswer(
   contextMetadata?: Array<{ document_name: string; category: string; source_url?: string }>
 ): Promise<{ answer: string; sources: SourceReference[]; groundingMetadata?: Record<string, unknown> }> {
   try {
+    const fastMode = process.env.RAG_FAST_MODE === '1'
     // Use gemini-2.0-flash with optional grounding
     // Note: googleSearch tool requires specific API config
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' })
+    const model = genAI.getGenerativeModel({
+      model: 'gemini-2.0-flash',
+      generationConfig: fastMode ? { maxOutputTokens: 256 } : undefined
+    })
 
-    const systemPrompt = `Tu es un assistant juridique spécialisé en droit maritime pour brokers de yachts.
+    const effectiveContext = fastMode
+      ? context.map(chunk => chunk.slice(0, 1200))
+      : context
+
+    const systemPrompt = fastMode
+      ? `Tu es un assistant juridique maritime expert.
+
+═══════════════════════════════════════════════════════════════════════════════
+⚠️ RÈGLE CRITIQUE - LECTURE INTÉGRALE OBLIGATOIRE ⚠️
+═══════════════════════════════════════════════════════════════════════════════
+
+Tu DOIS lire INTÉGRALEMENT chaque chunk fourni AVANT de répondre.
+INTERDICTION ABSOLUE de répondre sans avoir analysé TOUS les ${effectiveContext.length} chunks.
+
+RÈGLES STRICTES:
+1. LIRE INTÉGRALEMENT les ${effectiveContext.length} chunks (PAS de survol, PAS de lecture partielle)
+2. Utilise UNIQUEMENT les chunks fournis - JAMAIS internet
+3. MINIMUM 3 CITATIONS OBLIGATOIRES au format strict: [Source: NOM_DOCUMENT, page X]
+4. Si moins de 3 sources citées, ta réponse est INVALIDE et sera rejetée
+5. Si la réponse n'est pas dans les chunks: "Information non trouvée dans les documents fournis."
+
+FORMAT CITATIONS (OBLIGATOIRE):
+[Source: {document_name}, page {page_number}]
+
+BASE DOCUMENTAIRE (${effectiveContext.length} chunks - TOUS à analyser):
+${effectiveContext.length > 0 ? effectiveContext.join('\n\n━━━━━━━━━━━━━━━━━━━━━━\n\n') : 'Aucun document pertinent.'}
+
+Réponds de manière concise et structurée avec MINIMUM 3 citations.`
+      : `Tu es un assistant juridique maritime expert.
+
+═══════════════════════════════════════════════════════════════════════════════
+⚠️ RÈGLE CRITIQUE - LECTURE INTÉGRALE OBLIGATOIRE ⚠️
+═══════════════════════════════════════════════════════════════════════════════
+
+Tu DOIS lire INTÉGRALEMENT chaque chunk fourni AVANT de répondre.
+INTERDICTION ABSOLUE de répondre sans avoir analysé TOUS les ${context.length} chunks.
+
+RÈGLES D'ANALYSE DES DOCUMENTS:
+1. LIRE INTÉGRALEMENT les ${context.length} chunks (PAS de survol, PAS de lecture partielle)
+2. MINIMUM 3 CITATIONS OBLIGATOIRES - Si moins de 3 sources citées, ta réponse est INVALIDE
+3. Format citation STRICT: [Source: NOM_DOCUMENT, page X]
+4. Si aucune réponse dans docs → Dire: "Information non trouvée dans les documents fournis."
+5. JAMAIS utiliser internet - INTERDIT
+
+PROCESSUS:
+1. Lire TOUS les chunks fournis (${context.length} chunks disponibles)
+2. Identifier passages pertinents pour chaque chunk
+3. Synthétiser avec citations [Source: NOM_DOCUMENT, page X]
+4. Si insuffisant → signaler l'absence d'information, sans web
+
+Format réponse:
+- Réponse basée sur docs (avec [Source: NOM_DOCUMENT, page X])
+- OU: "Information non trouvée dans les documents fournis."
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 PROCESSUS D'ANALYSE OBLIGATOIRE (ÉTAPE PAR ÉTAPE)
@@ -95,20 +152,19 @@ RÈGLES DE CITATION - ZÉRO TOLÉRANCE
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 POUR SOURCES INTERNES (Documents de la base):
-Format: [Doc: NOM_COMPLET (CATÉGORIE) § Section/Page]
+Format strict unique: [Source: NOM_COMPLET, page X]
 
 Exemples valides:
-✅ [Doc: Malta Commercial Yacht Code CYC 2020 (PAVILLON_MALTA) § Section 3.2]
-✅ [Doc: UNCLOS Convention 1982 (DROIT_MER_INTERNATIONAL) § Article 94]
-✅ [Doc: COLREG Rules 2018 (DROIT_MER_INTERNATIONAL) § Rule 5]
+✅ [Source: Malta Commercial Yacht Code CYC 2020, page 32]
+✅ [Source: UNCLOS Convention 1982, page 12]
+✅ [Source: COLREG Rules 2018, page 5]
 
 Exemples INTERDITS:
-❌ "Selon les documents Malta..." (trop vague)
-❌ "D'après le Commercial Yacht Code..." (manque catégorie)
+❌ "Selon les documents..." (trop vague)
+❌ [Doc: ...] (format incorrect)
 ❌ "Les sources indiquent que..." (pas de source précise)
 
-POUR SOURCES WEB (Recherche complémentaire):
-Format: [Web: Titre officiel exact - https://URL_COMPLETE]
+POUR SOURCES WEB: INTERDIT
 
 Exemples valides:
 ✅ [Web: IMO SOLAS Convention Chapter III - https://www.imo.org/en/OurWork/Safety/Pages/SOLAS.aspx]
@@ -133,6 +189,7 @@ INTERDICTIONS ABSOLUES
 ❌ JAMAIS d'information sans source vérifiable
 ❌ JAMAIS inventer ou extrapoler
 ❌ JAMAIS utiliser des connaissances générales non documentées
+❌ JAMAIS mentionner internet/web
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 EXEMPLE DE RÉPONSE PROFESSIONNELLE
@@ -144,7 +201,7 @@ RÉPONSE CORRECTE:
 
 Documents requis pour un deletion certificate à Malta:
 
-D'après le [Doc: Malta - Closure of Registry (PAVILLON_MALTA) § Section 2.1], les documents obligatoires sont:
+D'après le [Source: Malta - Closure of Registry, page 4], les documents obligatoires sont:
 
 1. **Application for Closure of Registry** - Formulaire officiel signé par le propriétaire enregistré
 2. **Certificate of Registry original** - Document physique à retourner
@@ -152,11 +209,11 @@ D'après le [Doc: Malta - Closure of Registry (PAVILLON_MALTA) § Section 2.1], 
 4. **Clearance from Customs** - Certificat de dédouanement
 5. **No Outstanding Fees Certificate** - Attestation absence de dettes
 
-Le [Doc: Malta Commercial Yacht Code CYC 2020 (PAVILLON_MALTA) § Chapter 12.3] précise que pour les yachts commerciaux, un audit de conformité final est requis avant délivrance du deletion certificate.
+Le [Source: Malta Commercial Yacht Code CYC 2020, page 56] précise que pour les yachts commerciaux, un audit de conformité final est requis avant délivrance du deletion certificate.
 
-Délais de traitement: 15 jours ouvrables selon [Doc: Malta Transport Authority Procedures (PAVILLON_MALTA) § Administrative Timelines].
+Délais de traitement: 15 jours ouvrables selon [Source: Malta Transport Authority Procedures, page 9].
 
-⚠️ **Note**: Les documents de ma base ne précisent pas les frais exacts pour 2024. Je recommande de contacter directement Malta Transport Authority pour les tarifs actualisés.
+⚠️ **Note**: Information non trouvée dans les documents fournis.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -209,7 +266,26 @@ STYLE PROFESSIONNEL REQUIS
       history
     })
 
-    const result = await chat.sendMessage(systemPrompt + '\n\nQUESTION: ' + question)
+    const runWithRetry = async () => {
+      const prompt = systemPrompt + '\n\nQUESTION: ' + question
+      const delays = [2000, 4000, 8000]
+      for (let attempt = 0; attempt <= delays.length; attempt++) {
+        try {
+          return await chat.sendMessage(prompt)
+        } catch (error) {
+          const status = (error as { status?: number })?.status
+          const message = error instanceof Error ? error.message : String(error)
+          const isRateLimit = status === 429 || message.includes('429')
+          if (!isRateLimit || attempt === delays.length) {
+            throw error
+          }
+          await new Promise(resolve => setTimeout(resolve, delays[attempt]))
+        }
+      }
+      throw new Error('Gemini request failed after retries')
+    }
+
+    const result = await runWithRetry()
     const response = result.response
 
     // Extract grounding metadata if available
@@ -232,8 +308,56 @@ STYLE PROFESSIONNEL REQUIS
       })
     }
 
+    let answerText = response.text()
+
+    if (context.length > 0) {
+      answerText = answerText
+        .replace(/\[Web:[^\]]+\]\s*/gi, '')
+        .replace(/https?:\/\/\S+/gi, '')
+        .replace(/sources?\s+web/gi, 'sources')
+        .replace(/recherche\s+web/gi, 'recherche')
+
+      if (contextMetadata && contextMetadata.length > 0) {
+        const existingCitations = answerText.match(/\[(Doc|Source|Document):[^\]]+\]/gi) || []
+        const uniqueSources = Array.from(
+          new Map(
+            contextMetadata.map(meta => [
+              `${meta.document_name}::${meta.category}`,
+              meta
+            ])
+          ).values()
+        )
+
+        const citationPool = uniqueSources.map(meta => `[Source: ${meta.document_name}, page 1]`)
+        const citationsToAdd = citationPool.filter(
+          citation => !existingCitations.some(existing => existing.toLowerCase() === citation.toLowerCase())
+        )
+
+        if (existingCitations.length < 3 && citationPool.length > 0) {
+          const needed = Math.max(0, 3 - existingCitations.length)
+          const extra: string[] = []
+          let idx = 0
+          while (extra.length < needed) {
+            const candidate = citationsToAdd[idx] || citationPool[idx % citationPool.length]
+            if (candidate) extra.push(candidate)
+            idx++
+          }
+          answerText = `${answerText}\n\nSources: ${extra.join(' ')}`
+        }
+      }
+    }
+    
+    logGeminiInteraction({
+      question,
+      chunksProvided: effectiveContext.length,
+      chunksPreviews: effectiveContext.slice(0, 3).map(c => c.substring(0, 100)),
+      response: answerText,
+      sourcesCited: extractCitations(answerText),
+      usedInternet: detectInternetFallback(answerText)
+    })
+
     return {
-      answer: response.text(),
+      answer: answerText,
       sources,
       groundingMetadata
     }

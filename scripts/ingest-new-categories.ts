@@ -167,7 +167,7 @@ async function ingestDocument(
     console.log(`   Document ID: ${document.id}`)
 
     // ETAPE 3: Chunking
-    const chunks = chunkText(text, 500, 100)
+    const chunks = chunkText(text, 500, 200)
     console.log(`   Chunks: ${chunks.length}`)
 
     if (chunks.length === 0) {

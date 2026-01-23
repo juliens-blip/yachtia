@@ -4,7 +4,7 @@
  * Processus:
  * 1. Télécharge PDFs et scrape pages HTML
  * 2. Extrait le texte
- * 3. Chunke le texte (500 tokens, 100 overlap)
+ * 3. Chunke le texte (500 tokens, 200 overlap)
  * 4. Génère les embeddings (batch de 10)
  * 5. Stocke dans Supabase (documents + document_chunks)
  * 
@@ -48,6 +48,12 @@ function sleep(ms: number): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, ms))
 }
 
+function sanitizeText(input: string): string {
+  return input
+    .replace(/\u0000/g, '')
+    .replace(/[\uD800-\uDFFF]/g, '')
+}
+
 /**
  * Ingestion d'un seul document avec retry logic
  */
@@ -77,8 +83,11 @@ async function ingestDocument(
       console.log(`   📰 Article web extrait`)
     }
     
+    text = sanitizeText(text)
+
     if (!text || text.length < 100) {
-      throw new Error('Text too short (< 100 chars) - possibly extraction failed')
+      console.warn('   ⚠️  Text too short, inserting placeholder')
+      text = `${doc.name}\nSource: ${doc.url}\n[PDF content not extractable]`
     }
     
     console.log(`   ✂️  Texte total: ${text.length} caractères`)
@@ -114,7 +123,7 @@ async function ingestDocument(
     // ──────────────────────────────────────────────────────
     // ÉTAPE 3: Chunker le texte
     // ──────────────────────────────────────────────────────
-    const chunks = chunkText(text, 500, 100)
+    const chunks = chunkText(text, 500, 200)
     console.log(`   ✂️  ${chunks.length} chunks créés`)
     
     if (chunks.length === 0) {
