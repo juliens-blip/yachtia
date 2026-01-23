@@ -336,6 +336,102 @@ export const REFERENCE_DOCS: Record<string, ReferenceDocument[]> = {
       name: 'YachtieCareers - Yacht Crew Visas to Work in Europe',
       type: 'html',
       language: 'en'
+    },
+    {
+      url: 'https://www.mer.gouv.fr/sites/default/files/2021-02/EN_fact%20sheet_social%20conditions%20workers%20MRE.pdf',
+      name: 'France - ENIM Fact Sheet Social Conditions Workers MRE/RIF (PDF)',
+      type: 'pdf',
+      language: 'en'
+    },
+    {
+      url: 'https://www.mer.gouv.fr/sites/default/files/2023-09/Fiche%20EMR%20MAJ%202023%20-%2028%2009%2023_EN.pdf',
+      name: 'France - Fiche EMR MAJ 2023 (RIF Crew Social Conditions) (PDF)',
+      type: 'pdf',
+      language: 'en'
+    },
+    {
+      url: 'https://www.rif.mer.gouv.fr/social-security-of-workers-residing-in-eu-eea-a338.html?lang=en',
+      name: 'France RIF - Social Security of Workers Residing in EU/EEA/Switzerland',
+      type: 'html',
+      language: 'en'
+    },
+    {
+      url: 'https://oceanskies.com/guide/french-social-security-obligations-for-yacht-crew-working-onboard-yachts-flying-the-french-flag-or-residing-in-france/',
+      name: 'Ocean Skies - French Social Security Obligations for Yacht Crew',
+      type: 'html',
+      language: 'en'
+    },
+    {
+      url: 'https://dalpolcrewing.files.wordpress.com/2013/12/ccnl-navi-sup-151-english-version-1-aug-2013.pdf',
+      name: 'Italy - CCNL Navi Sup >151 GT (National Collective Agreement) (PDF)',
+      type: 'pdf',
+      language: 'en'
+    },
+    {
+      url: 'https://dadosav.files.wordpress.com/2018/01/ascoma-seafarer-legal-obligation-and-solution-january-2018.pdf',
+      name: 'Italy - Seafarer Legal Obligation & Solutions (Decree 9 March 2017) (PDF)',
+      type: 'pdf',
+      language: 'en'
+    },
+    {
+      url: 'https://marineaccounts.com/spanish-tax-for-yacht-crew',
+      name: 'Spain - Spanish Tax for Yacht Crew (Social Security, Tax Residency)',
+      type: 'html',
+      language: 'en'
+    },
+    {
+      url: 'https://www.hfw.com/app/uploads/2024/04/004621-HFW-Comprehensively-Yachts-Dec-22.pdf',
+      name: 'HFW - Regulations Applicable to Seafarers Employment Contracts on Yachts (PDF)',
+      type: 'pdf',
+      language: 'en'
+    },
+    {
+      url: 'https://cms.law/en/mco/publication/yachting-social-protection',
+      name: 'CMS Monaco - Yachting & Social Protection (Crew, ENIM, Residents)',
+      type: 'html',
+      language: 'en'
+    },
+    {
+      url: 'https://www.yacht-zoo.com/news/crew-social-security-where-do-you-stand/',
+      name: 'Yacht-zoo - Crew Social Security: Where Do You Stand?',
+      type: 'html',
+      language: 'en'
+    },
+    {
+      url: 'https://theislander.online/2023/09/crew-life/crew-social-security-a-closer-look/',
+      name: 'The Islander - Crew Social Security: A Closer Look',
+      type: 'html',
+      language: 'en'
+    },
+    {
+      url: 'https://www.bluewateryachting.com/_uploads/broadcasts/brokerage/downloads/bluewater-crew-starting-out-guide-2020_20200421203809.pdf',
+      name: 'Bluewater - Crew Starting Out Guide (Contracts, MLC) (PDF)',
+      type: 'pdf',
+      language: 'en'
+    },
+    {
+      url: 'https://www.crewseekers.net/media/uploads/files/Yacht_Crew_Agreement.pdf',
+      name: 'UK - Yacht Crew Agreement (MLC Model, Merchant Shipping Regs 2014) (PDF)',
+      type: 'pdf',
+      language: 'en'
+    },
+    {
+      url: 'https://www.etf-europe.org/wp-content/uploads/2022/03/Social-security-rights-of-the-European-resident-seafarers_ETF-WMU-joint-re.pdf',
+      name: 'ETF/WMU - Social Security Rights of European Resident Seafarers (PDF)',
+      type: 'pdf',
+      language: 'en'
+    },
+    {
+      url: 'https://www.iswan.org.uk/wp-content/uploads/The-Welfare-of-Superyacht-Crew-2.pdf',
+      name: 'ISWAN - Welfare of Superyacht Crew (MLC vs Private Yachts) (PDF)',
+      type: 'pdf',
+      language: 'en'
+    },
+    {
+      url: 'https://cdmo.univ-nantes.fr/medias/fichier/chaumette_1383126689258.pdf',
+      name: 'France - Contentieux du Yachting (Droit Social/Fiscal) (PDF)',
+      type: 'pdf',
+      language: 'fr'
     }
   ],
 
@@ -357,6 +453,12 @@ export const REFERENCE_DOCS: Record<string, ReferenceDocument[]> = {
       language: 'en'
     },
     {
+      url: 'https://www.rif.mer.gouv.fr/yachts-%E2%89%A4-24-metres-lh-a387.html?lang=en',
+      name: 'RIF - Yachts <= 24m (Division 241 Regulations)',
+      type: 'html',
+      language: 'en'
+    },
+    {
       url: 'https://www.rif.mer.gouv.fr/attractive-tax-system-for-shipowners-and-seafarers-a586.html?lang=en',
       name: 'RIF - Attractive Tax System for Shipowners and Seafarers (Official)',
       type: 'html',
@@ -367,6 +469,12 @@ export const REFERENCE_DOCS: Record<string, ReferenceDocument[]> = {
       name: 'Marty Legal - Register at the RIF',
       type: 'html',
       language: 'en'
+    },
+    {
+      url: 'https://www.scribd.com/document/906227738/RIF-grands-yachts-VA-web-cle56713f',
+      name: 'RIF - Grands Yachts (VA) (PDF)',
+      type: 'pdf',
+      language: 'fr'
     },
     {
       url: 'https://www.yachting-pages.com/articles/french-government-announces-tighter-regulations-for-yacht-owners-and-crew.html',
@@ -879,6 +987,51 @@ export const REFERENCE_DOCS: Record<string, ReferenceDocument[]> = {
       name: "UK / REG - A Master's Guide to the UK Flag (Large Yacht Edition) (GOV.UK HTML)",
       type: 'html',
       language: 'en'
+    },
+    
+  ],
+
+  // ═══════════════════════════════════════════════════════════
+  // PAVILLON OFFICIEL - MADÈRE (MAR)
+  // Registre international, guides officiels
+  // ═══════════════════════════════════════════════════════════
+  PAVILLON_MADERE: [
+    {
+      url: 'https://www.ums.pt/assets/ums_yacth2.pdf',
+      name: 'Madeira (MAR) - International Ship Registry Guide for Yachts (PDF)',
+      type: 'pdf',
+      language: 'en'
+    },
+    {
+      url: 'https://www.ums.pt/assets/ums_ship2.pdf',
+      name: 'Madeira (MAR) - Ship Registry Guide (PDF)',
+      type: 'pdf',
+      language: 'en'
+    },
+    {
+      url: 'https://www.ibc-madeira.com/images/pdf/en-05-DL_96_89.pdf',
+      name: 'Portugal - Decree-Law 96/89 (Madeira Register) (PDF)',
+      type: 'pdf',
+      language: 'en'
+    }
+  ],
+
+  // ═══════════════════════════════════════════════════════════
+  // PAVILLON OFFICIEL - CHYPRE
+  // Registre, leasing, guides
+  // ═══════════════════════════════════════════════════════════
+  PAVILLON_CHYPRE: [
+    {
+      url: 'https://kvlaw.eu/wp-content/uploads/christina/2021/02/The-Yacht-Regime.02.12.19.pdf',
+      name: 'Cyprus - Yacht Regime (KV Law PDF)',
+      type: 'pdf',
+      language: 'en'
+    },
+    {
+      url: 'https://servco.com.cy/PDF/Yacht_Registration.pdf',
+      name: 'Cyprus - Yacht Registration (Servco PDF)',
+      type: 'pdf',
+      language: 'en'
     }
   ],
 
@@ -1044,6 +1197,358 @@ export const REFERENCE_DOCS: Record<string, ReferenceDocument[]> = {
       url: 'https://www.superyachtseurope.com/legal',
       name: 'Superyachts Europe - Legal Information (Charter, Clauses)',
       type: 'html',
+      language: 'en'
+    },
+    {
+      url: 'https://pole-transports-facdedroit.univ-amu.fr/sites/pole-transports-facdedroit.univ-amu.fr/files/public/master_maritime_ramelet.pdf',
+      name: 'France/UK - Attractivite Pavillon Britannique Post-Brexit vs RIF (PDF)',
+      type: 'pdf',
+      language: 'fr'
+    }
+  ],
+
+  // ═══════════════════════════════════════════════════════════
+  // US / DELAWARE / USCG DOCUMENTATION
+  // Coast Guard vessel documentation, Delaware registration
+  // ═══════════════════════════════════════════════════════════
+  USCG_DELAWARE: [
+    {
+      url: 'https://www.dco.uscg.mil/Portals/9/DCO%20Documents/NVDC/Instructions/INITIAL%20VESSEL%20DOCUMENTATION%2003-2025.pdf',
+      name: 'USCG - Initial Vessel Documentation Instructions (03-2025) (PDF)',
+      type: 'pdf',
+      language: 'en'
+    },
+    {
+      url: 'https://www.dco.uscg.mil/Portals/9/DCO%20Documents/NVDC/Instructions/FAQ%20DOCUMENTING%20A%20VESSEL%2003-2025.pdf',
+      name: 'USCG - FAQ Documenting a Vessel (03-2025) (PDF)',
+      type: 'pdf',
+      language: 'en'
+    },
+    {
+      url: 'https://www.dco.uscg.mil/Our-Organization/Assistant-Commandant-for-Prevention-Policy-CG-5P/Inspections-Compliance-CG-5PC-/National-Vessel-Documentation-Center/NVDC-Instruction-and-Forms/',
+      name: 'USCG NVDC - Instructions and Forms (Official)',
+      type: 'html',
+      language: 'en'
+    },
+    {
+      url: 'https://www.mpofcinci.com/blog/complete-guide-to-uscg-documentation-standards-and-requirements-for-boats/',
+      name: 'Complete Guide to USCG Documentation Standards and Requirements',
+      type: 'html',
+      language: 'en'
+    },
+    {
+      url: 'https://www.boatus.com/products-and-services/boat-lettering/uscg-requirements',
+      name: 'BoatUS - USCG Requirements (Identification, Marking)',
+      type: 'html',
+      language: 'en'
+    },
+    {
+      url: 'https://dnrec.delaware.gov/fish-wildlife/boating/registration/',
+      name: 'Delaware DNREC - Boating Registration (Official)',
+      type: 'html',
+      language: 'en'
+    },
+    {
+      url: 'https://dmv.de.gov/VehicleServices/faqs/index.shtml?dc=ve_faqs_boat',
+      name: 'Delaware DMV - Boat Registration & Titles FAQ',
+      type: 'html',
+      language: 'en'
+    },
+    {
+      url: 'https://boat-registration.us',
+      name: 'Boat Registration US - Service Site (Broker Practices)',
+      type: 'html',
+      language: 'en'
+    }
+  ],
+
+  // ═══════════════════════════════════════════════════════════
+  // GRÈCE - CHARTERS, LICENCES, RÉFORMES
+  // E-Charter, TEPAI, Greek maritime legal reforms
+  // ═══════════════════════════════════════════════════════════
+  GRECE_CHARTER: [
+    {
+      url: 'https://www.stephensonharwood.com/media/2riah44v/e-charter-permission-the-digitalization-of-chartering-in-greece-april-2024.pdf',
+      name: 'Stephenson Harwood - E-Charter Permission Greece (April 2024) (PDF)',
+      type: 'pdf',
+      language: 'en'
+    },
+    {
+      url: 'https://www.roditis.eu/news/charterpermissionplus',
+      name: 'Roditis - New Law for Foreign Commercial Yachts in Greece (TEPAI)',
+      type: 'html',
+      language: 'en'
+    },
+    {
+      url: 'https://quaynote.com/wp-content/uploads/2024/01/Elisavet-Article.pdf',
+      name: 'Quaynote - Navigating Greek Maritime Legal Reforms (PDF)',
+      type: 'pdf',
+      language: 'en'
+    },
+    {
+      url: 'https://www.ecpy.org/web/content/36147?download=true',
+      name: 'ECPY - Specified Period Charter License & VAT Rules 2024 (PDF)',
+      type: 'pdf',
+      language: 'en'
+    },
+    {
+      url: 'https://www.hfw.com/app/uploads/2024/04/SLR10_Greece.pdf',
+      name: 'HFW - Shipping Law Review Greece (PDF)',
+      type: 'pdf',
+      language: 'en'
+    }
+  ],
+
+  // ═══════════════════════════════════════════════════════════
+  // TVA / CHARTER MED - HISTORIQUES & COMPARATIFS
+  // VAT Mediterranean, Italy, Croatia, Greece, France, Spain
+  // ═══════════════════════════════════════════════════════════
+  TVA_CHARTER_MED: [
+    {
+      url: 'https://www.yachtwelfare.it/wp-content/uploads/2018/05/YW_VAT_Guide_2018_R1.pdf',
+      name: 'Yacht Welfare - VAT Guide 2018 Italy (PDF)',
+      type: 'pdf',
+      language: 'en'
+    },
+    {
+      url: 'https://www.yachtmaster.hr/wp-content/uploads/2025/09/Icebreaker_Edition8_2025.pdf',
+      name: 'Yacht Charter Magazine Icebreaker 2025 - VAT Overview (Croatia, Greece, France, Spain, Italy) (PDF)',
+      type: 'pdf',
+      language: 'en'
+    },
+    {
+      url: 'https://cruisingclub.org/sites/default/files/article_files/Legalities%20Final%20&%20TOC%203.31.24.pdf',
+      name: 'Cruising Club - European Legalities from North American Cruisers Perspective (VAT, Immigration) (PDF)',
+      type: 'pdf',
+      language: 'en'
+    },
+    {
+      url: 'https://aebre.org/wp-content/uploads/2020/01/Report-Charter-Results-Summer-2019.pdf',
+      name: 'AEBRE - Economic Impact Large Yacht Charter Spain (VAT Remarks) (PDF)',
+      type: 'pdf',
+      language: 'en'
+    },
+    {
+      url: 'http://www.magellan.lu/sites/default/files/article_files/vat_yacht_italy.pdf',
+      name: 'Italy - VAT Guide for Yachting Business (Circular 43/E 2011) (PDF)',
+      type: 'pdf',
+      language: 'en'
+    },
+    {
+      url: 'https://www.yachtwelfare.it/wp-content/uploads/2013/07/YW_VAT_Guide_ITA.pdf',
+      name: 'Italy - Fiscal Representative VAT Compliance Guide (PDF)',
+      type: 'pdf',
+      language: 'en'
+    },
+    {
+      url: 'https://www.iru.org/sites/default/files/2017-02/fr-cabotage-survey-spain_0.pdf',
+      name: 'Spain - Cabotage Law 15/2009 (IRU Survey PDF)',
+      type: 'pdf',
+      language: 'en'
+    },
+    {
+      url: 'https://www.boote-magazin.de/en/travel-and-charter/charter/spain-stricter-rules-for-charter-providers/',
+      name: 'Spain - Stricter Rules for Charter Providers (Balearic Decree 21/2017)',
+      type: 'html',
+      language: 'en'
+    },
+    {
+      url: 'https://www.lrf.fr/en/your-activities/yacht-chartering-in-france/',
+      name: 'France - Yacht Chartering in France (LRF Legal Overview)',
+      type: 'html',
+      language: 'en'
+    },
+    {
+      url: 'https://www.treppides.com/images/publications/newsletters/CyprusVATYachtLeasingScheme.pdf',
+      name: 'Cyprus - VAT Yacht Leasing Scheme (Circular PDF)',
+      type: 'pdf',
+      language: 'en'
+    }
+  ],
+
+  // ═══════════════════════════════════════════════════════════
+  // CROATIE - CHARTER, LICENCES, REGISTRE
+  // Contrats, licences, registre des yachts
+  // ═══════════════════════════════════════════════════════════
+  CROATIE_CHARTER: [
+    {
+      url: 'https://mmpi.gov.hr/UserDocsImages/arhiva/ORDINANCE%20charteru_EN_final%2019-5_17.pdf',
+      name: 'Croatia - Ordinance on Charter Activities (Official PDF)',
+      type: 'pdf',
+      language: 'en'
+    },
+    {
+      url: 'https://mmpi.gov.hr/UserDocsImages/arhiva/2005/041231-guidelines-registration.pdf',
+      name: 'Croatia - Guidelines Registration Croatian Register of Yachts (PDF)',
+      type: 'pdf',
+      language: 'en'
+    },
+    {
+      url: 'https://www.croatia-yachting-charter.com/images/documents/acceptable-licences-sailing-croatia.pdf',
+      name: 'Croatia - Acceptable Licences for Sailing (PDF)',
+      type: 'pdf',
+      language: 'en'
+    },
+    {
+      url: 'https://wiyachts.com/blog/wp-content/uploads/2022/06/WIYachts-Croatia-Sailing-requirements.pdf',
+      name: 'Croatia - Sailing Requirements (Skipper/VHF) (PDF)',
+      type: 'pdf',
+      language: 'en'
+    },
+    {
+      url: 'https://yachting-pro.de/wp-content/uploads/2022/08/BOATING-LICENSES-GUIDE.pdf',
+      name: 'Croatia - Boating Licenses Guide (PDF)',
+      type: 'pdf',
+      language: 'en'
+    },
+    {
+      url: 'https://www.adriatic-sailing.hr/Downloads/general-charter-terms-bareboat-yachts.pdf',
+      name: 'Croatia - General Charter Terms Bareboat (ACI PDF)',
+      type: 'pdf',
+      language: 'en'
+    },
+    {
+      url: 'https://www.dpps-mlas.si/wp-content/uploads/2021/10/12.-Prof.-Dr.-Ranka-Petrinovic-Dr.-Vesna-Skorupan-Wolff-Yacht-Charter-Party-Agreement.pdf',
+      name: 'Croatia - Yacht Charter Party Agreement (Croatian Maritime Code) (PDF)',
+      type: 'pdf',
+      language: 'en'
+    }
+  ],
+
+  // ═══════════════════════════════════════════════════════════
+  // TURQUIE - BLUE CARD SYSTEM
+  // Réglementation environnementale / yacht law
+  // ═══════════════════════════════════════════════════════════
+  TURQUIE_BLUE_CARD: [
+    {
+      url: 'https://aksoylaw.com/wp-content/uploads/2025/04/Aksoy-Law-April-2025-Blue-Card-System.pdf',
+      name: 'Turkey - Blue Card System in Turkish Yacht Law (Aksoy Law 2025 PDF)',
+      type: 'pdf',
+      language: 'en'
+    },
+    {
+      url: 'http://www.skipperguru.ru/Files/Turkey_blue_card_regulation_rules.pdf',
+      name: 'Turkey - Blue Card Regulation Rules (PDF)',
+      type: 'pdf',
+      language: 'en'
+    }
+  ],
+
+  // ═══════════════════════════════════════════════════════════
+  // MONTENEGRO - CLEARANCE / VIGNETTE
+  // Formalités d'entrée et permis de navigation
+  // ═══════════════════════════════════════════════════════════
+  MONTENEGRO_CLEARANCE: [
+    {
+      url: 'https://www.portomontenegro.com/wp-content/uploads/2019/05/CLEARANCE-SHEET.pdf',
+      name: 'Montenegro - Vignette / Cruising Permit (Porto Montenegro PDF)',
+      type: 'pdf',
+      language: 'en'
+    },
+    {
+      url: 'https://blog.navily.com/en/wp-content/uploads/sites/3/2025/07/Check-in-procedure-in-Montenegro.pdf',
+      name: 'Montenegro - Yacht Clearance Formalities (PDF)',
+      type: 'pdf',
+      language: 'en'
+    },
+    {
+      url: 'https://chartermne.com/montenegro-sailing-rules-what-to-know-2025/',
+      name: 'Montenegro - Sailing Rules 2025 (Guide)',
+      type: 'html',
+      language: 'en'
+    }
+  ],
+
+  // ═══════════════════════════════════════════════════════════
+  // ALBANIE - RÉGLEMENTATION / ASSURANCE
+  // STCW, TPL insurance
+  // ═══════════════════════════════════════════════════════════
+  ALBANIE_REGS: [
+    {
+      url: 'https://www.facebook.com/ALBANIA.STCW/posts/we-have-created-an-electronic-database-for-albanian-seafarers-skippers-and-yacht/',
+      name: 'Albania - STCW Seafarers/Yacht Captain Database (Official FB Page)',
+      type: 'html',
+      language: 'en'
+    },
+    {
+      url: 'https://amf.gov.al/pdf/ligje/Law%20on%20TPL.pdf',
+      name: 'Albania - Law on TPL Insurance (PDF)',
+      type: 'pdf',
+      language: 'en'
+    }
+  ],
+
+  // ═══════════════════════════════════════════════════════════
+  // VISAS / SCHENGEN / IMMIGRATION ÉQUIPAGE
+  // Crew visas, B1/B2, Schengen stamps
+  // ═══════════════════════════════════════════════════════════
+  VISAS_SCHENGEN: [
+    {
+      url: 'https://seazone.app/news/all-you-wanted-to-know-about-yacht-crew-visa/',
+      name: 'Seazone - All About Yacht Crew Schengen Visa & B1/B2 Visa',
+      type: 'html',
+      language: 'en'
+    },
+    {
+      url: 'https://www.pya.org/news/guidelines-for-being-stamped-in-and-out-of-the-schengen-area-for-visa-holders',
+      name: 'PYA - Guidelines for Schengen Area Stamps (Visa Holders)',
+      type: 'html',
+      language: 'en'
+    },
+    {
+      url: 'https://theislander.online/2015/02/crew-life/superyacht-crew-visa-requirements-what-you-need-to-know/',
+      name: 'The Islander - Superyacht Crew Visa Requirements (Schengen + US B1/B2)',
+      type: 'html',
+      language: 'en'
+    }
+  ],
+
+  // ═══════════════════════════════════════════════════════════
+  // ASSURANCE / P&I / OBLIGATIONS PORTUAIRES
+  // Hull insurance, P&I clubs, marina requirements
+  // ═══════════════════════════════════════════════════════════
+  ASSURANCE_PI: [
+    {
+      url: 'https://www.merrimacins.com/what-are-yacht-club-insurance-requirements/',
+      name: 'Merrimac Insurance - Yacht Club Insurance Requirements (Hull + P&I)',
+      type: 'html',
+      language: 'en'
+    },
+    {
+      url: 'https://www.theownersclub.org/handbook/insuring/types-of-insurance',
+      name: 'The Owners Club - Types of Insurance (Yachts >300 GT, P&I, TPL)',
+      type: 'html',
+      language: 'en'
+    },
+    {
+      url: 'https://firstpolicy.com/understanding-protection-indemnity-pi-insurance-a-guide-for-shipowners-and-operators/',
+      name: 'First Policy - P&I Insurance Explained: Guide for Shipowners',
+      type: 'html',
+      language: 'en'
+    },
+    {
+      url: 'https://jameshallam.co.uk/role-of-p-and-i-clubs-global-shipping/',
+      name: 'James Hallam - Role of P&I Clubs in Global Shipping',
+      type: 'html',
+      language: 'en'
+    }
+  ],
+
+  // ═══════════════════════════════════════════════════════════
+  // COVID / RESTRICTIONS PORTS / MED
+  // Travel restrictions, port guidelines, cruise & yachting
+  // ═══════════════════════════════════════════════════════════
+  COVID_PORTS: [
+    {
+      url: 'https://www.mooresrowlandpartners.com/wp-content/uploads/2021/03/Yachts_Ports_and_Travel_Restrictions__1616261457.pdf',
+      name: 'Moore Stephens - Yachts, Ports and Travel Restrictions (COVID) (PDF)',
+      type: 'pdf',
+      language: 'en'
+    },
+    {
+      url: 'https://planbleu.org/wp-content/uploads/2022/04/Guidelines_planbleu_Cruise_FINAL.pdf',
+      name: 'Plan Bleu - Guidelines Cruise & Yachting Med (Environment, Ports) (PDF)',
+      type: 'pdf',
       language: 'en'
     }
   ]
