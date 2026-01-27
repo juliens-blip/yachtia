@@ -54,8 +54,6 @@ async function searchByDocumentName(
     })
 
     // Query: SELECT chunks WHERE document_name ILIKE any pattern
-    const orConditions = patterns.map(() => 'documents.name ILIKE ?').join(' OR ')
-    
     let query = supabaseAdmin
       .from('document_chunks')
       .select(`
@@ -83,6 +81,7 @@ async function searchByDocumentName(
     if (!data || data.length === 0) return []
 
     // Transform to SearchDocumentsRow format
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return data.map((row: any) => ({
       chunk_id: row.chunk_id,
       document_id: row.document_id,
@@ -505,7 +504,7 @@ function enforceMinUniqueAtTop<T extends { docKey: string; uniqueKey: string; ad
     .filter(({ item }) => (perDocCount.get(item.docKey) || 0) > 1)
     .sort((a, b) => a.item.adjustedScore - b.item.adjustedScore)
 
-  let updatedTop = topItems.slice()
+  const updatedTop = topItems.slice()
   let candidateIndex = 0
   let currentUnique = uniqueDocs.length
 

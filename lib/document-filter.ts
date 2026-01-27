@@ -168,7 +168,7 @@ export function logEliminatedDocuments(result: FilterResult): void {
   if (result.eliminated.length === 0) return
   
   console.log('\n🗑️ Documents éliminés (anti-bruit):')
-  result.eliminated.forEach((chunk, idx) => {
+  result.eliminated.forEach((chunk) => {
     const originalIndex = result.reason.keys().next().value as number | undefined
     const reason = originalIndex !== undefined ? (result.reason.get(originalIndex) || 'unknown') : 'unknown'
     console.log(`  - [${chunk.flag || 'N/A'}] ${chunk.title.substring(0, 60)}...`)

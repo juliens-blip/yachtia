@@ -28,8 +28,12 @@ export function recordRagMetric(metric: RagMetric): void {
   if (metricsFile) {
     try {
       const payload = JSON.stringify(metric)
-      const fs = require('node:fs') as typeof import('node:fs')
-      fs.appendFileSync(metricsFile, `${payload}\n`)
+      // Dynamic import for Node.js fs module
+      import('node:fs').then((fs) => {
+        fs.appendFileSync(metricsFile, `${payload}\n`)
+      }).catch((error) => {
+        console.warn('RAG metrics file write failed:', error)
+      })
     } catch (error) {
       console.warn('RAG metrics file write failed:', error)
     }
