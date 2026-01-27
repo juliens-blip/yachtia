@@ -39,6 +39,16 @@ export interface ExpandedQuery {
   keywords: string[]
 }
 
+function normalize(text: string): string {
+  return text
+    .normalize('NFD')
+    .replace(/[^\p{L}\p{N}\s]/gu, ' ')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
 function extractLegalKeywords(question: string): string[] {
   const keywords: string[] = []
   const lowerQuestion = question.toLowerCase()
@@ -59,7 +69,24 @@ function extractLegalKeywords(question: string): string[] {
 }
 
 function generateVariants(question: string): string[] {
+  const normalized = normalize(question)
   const variants: string[] = []
+
+  const isMaltaRegistration = normalized.includes('malta') && (
+    normalized.includes('registration') ||
+    normalized.includes('register') ||
+    normalized.includes('registry') ||
+    normalized.includes('immatriculation') ||
+    normalized.includes('enregistrement')
+  )
+
+  if (isMaltaRegistration) {
+    variants.push('Malta registration eligibility requirements')
+    variants.push('Malta ship registry documents process')
+    variants.push('OGSR Malta vessel registration criteria')
+    return variants
+  }
+
   const keywords = extractLegalKeywords(question)
   
   if (keywords.length > 0) {

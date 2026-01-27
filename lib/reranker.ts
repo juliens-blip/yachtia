@@ -1,9 +1,11 @@
 /**
  * Re-ranking module for RAG pipeline
- * 
+ *
  * Combines vector similarity with semantic relevance scoring
  * to improve chunk retrieval quality
  */
+
+import { detectDocType, getBoostFactor, getFlagBoost, getQueryCodeBoost } from './doc-type-tagger'
 
 export type RankedChunk = {
   chunk_text: string
@@ -86,12 +88,22 @@ export async function rerankChunks(
   topK: number = 5
 ): Promise<RankedChunk[]> {
   if (chunks.length === 0) return []
+  const profileEnabled = process.env.RERANK_PROFILE === '1'
+  if (profileEnabled) {
+    console.time('rerankChunks')
+  }
   
   const scoredChunks: RankedChunk[] = chunks.map(chunk => {
     const vectorScore = chunk.similarity
     const semanticScore = calculateSemanticScore(query, chunk.chunk_text)
-    const combinedScore = vectorScore * 0.5 + semanticScore * 0.5
-    
+    const baseScore = vectorScore * 0.5 + semanticScore * 0.5
+
+    const docType = detectDocType(chunk.documentName, chunk.category)
+    const docTypeBoost = getBoostFactor(docType)
+    const queryCodeBoost = getQueryCodeBoost(query, chunk.documentName, chunk.category)
+    const flagBoost = getFlagBoost(query, chunk.documentName, chunk.category)
+    const combinedScore = baseScore * docTypeBoost * queryCodeBoost * flagBoost
+
     return {
       ...chunk,
       score: combinedScore
@@ -100,7 +112,11 @@ export async function rerankChunks(
   
   scoredChunks.sort((a, b) => b.score - a.score)
   
-  return scoredChunks.slice(0, topK)
+  const results = scoredChunks.slice(0, topK)
+  if (profileEnabled) {
+    console.timeEnd('rerankChunks')
+  }
+  return results
 }
 
 /**

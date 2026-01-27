@@ -8,9 +8,12 @@
  * 4. Return formatted results for LLM
  */
 
-import { generateEmbedding } from './gemini'
+import { searchDocuments } from './search-documents'
+import { isComplexQuery, multiPassRetrieval } from './multi-pass-retrieval'
+import type { FilterContext } from './document-filter'
 import { supabaseAdmin } from './supabase'
-import { rerankChunks, getRerankingStats, type RankedChunk } from './reranker'
+import { expandQuery } from './question-processor'
+import { rerankChunks } from './reranker'
 
 export type RelevantChunk = {
   chunkId: string
@@ -24,24 +27,12 @@ export type RelevantChunk = {
   sourceUrl?: string
 }
 
-type SearchDocumentsRow = {
-  chunk_id: string
-  document_id: string
-  document_name: string
-  category: string
-  chunk_text: string
-  similarity: number
-  page_number: number | null
-  chunk_index: number
-  source_url?: string
-}
-
 /**
  * Retrieve relevant chunks for a query using vector search
  *
  * @param query - User's question
  * @param category - Optional category filter (MYBA, AML, etc.)
- * @param topK - Number of top results to return (default: 5)
+ * @param topK - Number of top results to return (default: 20)
  * @param similarityThreshold - Minimum similarity score (default: 0.6)
  * @param useReranking - Whether to apply re-ranking (default: true)
  * @returns Array of relevant chunks sorted by similarity/score
@@ -49,211 +40,65 @@ type SearchDocumentsRow = {
 export async function retrieveRelevantChunks(
   query: string,
   category?: string,
-  topK: number = 5,
+  topK: number = 20,
   similarityThreshold: number = 0.6,
-  useReranking: boolean = true
+  useReranking: boolean = true,
+  filterContext?: FilterContext
 ): Promise<RelevantChunk[]> {
-  try {
-    // Step 1: Generate query embedding
-    const queryEmbedding = await generateEmbedding(query)
-
-    // Step 2: Search via pgvector function - fetch more candidates for re-ranking
-    const candidateCount = useReranking ? Math.max(topK * 2, 10) : topK
-    
-    const callSearchDocuments = async (params: {
-      query_embedding: number[]
-      match_threshold: number
-      match_count: number
-      filter_category: string | null
-      use_reranking?: boolean
-    }) => {
-      const { data, error } = await supabaseAdmin.rpc('search_documents', params)
-
-      if (error && error.code === 'PGRST202' && 'use_reranking' in params) {
-        const { use_reranking, ...fallbackParams } = params
-        void use_reranking
-        const retry = await supabaseAdmin.rpc('search_documents', fallbackParams)
-        return retry
-      }
-
-      return { data, error }
-    }
-
-    const { data, error } = await callSearchDocuments({
-      query_embedding: queryEmbedding,
-      match_threshold: similarityThreshold,
-      match_count: candidateCount,
-      filter_category: category || null,
-      use_reranking: useReranking
+  if (isComplexQuery(query)) {
+    return multiPassRetrieval(query, 2, {
+      category,
+      similarityThreshold,
+      useReranking,
+      filterContext,
+      finalTopK: topK
     })
+  }
 
-    if (error) {
-      console.error('Vector search error:', error)
-      throw new Error(`Vector search failed: ${error.message}`)
-    }
+  const expanded = await expandQuery(query)
+  const variantQueries = expanded.variants.length > 0
+    ? expanded.variants.slice(0, 3)
+    : [expanded.original]
 
-    let rawResults = (data as SearchDocumentsRow[] | null) || []
+  if (variantQueries.length > 1) {
+    const perQueryTopK = 7
+    const queryResults = await Promise.all(
+      variantQueries.map(variant =>
+        searchDocuments(variant, category, perQueryTopK, similarityThreshold, false, filterContext)
+      )
+    )
 
-    // Retry with relaxed threshold and no category filter if nothing found
-    if (rawResults.length === 0) {
-      const relaxedThreshold = Math.max(0.3, similarityThreshold - 0.3)
-      const relaxedCount = Math.max(candidateCount * 2, 20)
+    const combined = deduplicateByChunkId(queryResults.flat())
+    if (combined.length === 0) return []
 
-      const { data: relaxedData, error: relaxedError } = await callSearchDocuments({
-        query_embedding: queryEmbedding,
-        match_threshold: relaxedThreshold,
-        match_count: relaxedCount,
-        filter_category: null,
-        use_reranking: useReranking
-      })
-
-      if (relaxedError) {
-        console.error('Vector search retry error:', relaxedError)
-      } else {
-        rawResults = (relaxedData as SearchDocumentsRow[] | null) || []
-      }
-    }
-
-    // Final fallback: keyword-reduced query with very low threshold
-    if (rawResults.length === 0) {
-      const keywordQuery = extractKeywordQuery(query)
-      if (keywordQuery && keywordQuery !== query) {
-        const keywordEmbedding = await generateEmbedding(keywordQuery)
-        const fallbackCount = Math.max(candidateCount * 3, 30)
-
-        const { data: fallbackData, error: fallbackError } = await callSearchDocuments({
-          query_embedding: keywordEmbedding,
-          match_threshold: 0.2,
-          match_count: fallbackCount,
-          filter_category: null,
-          use_reranking: useReranking
-        })
-
-        if (fallbackError) {
-          console.error('Vector search fallback error:', fallbackError)
-        } else {
-          rawResults = (fallbackData as SearchDocumentsRow[] | null) || []
-        }
-      }
-    }
-
-    // Absolute fallback: return nearest chunks with effectively no threshold
-    if (rawResults.length === 0) {
-      const fallbackCount = Math.max(candidateCount * 2, 20)
-      const { data: finalData, error: finalError } = await callSearchDocuments({
-        query_embedding: queryEmbedding,
-        match_threshold: -100.0,
-        match_count: fallbackCount,
-        filter_category: null,
-        use_reranking: useReranking
-      })
-
-      if (finalError) {
-        console.error('Vector search final fallback error:', finalError)
-      } else {
-        rawResults = (finalData as SearchDocumentsRow[] | null) || []
-      }
-    }
-
-    // Ensure we have enough candidates to rerank
-    if (rawResults.length > 0 && rawResults.length < topK) {
-      const fillCount = Math.max(candidateCount * 2, 20)
-      const { data: fillData, error: fillError } = await callSearchDocuments({
-        query_embedding: queryEmbedding,
-        match_threshold: -100.0,
-        match_count: fillCount,
-        filter_category: null,
-        use_reranking: useReranking
-      })
-
-      if (fillError) {
-        console.error('Vector search fill error:', fillError)
-      } else if (fillData) {
-        const merged = new Map<string, SearchDocumentsRow>()
-        rawResults.forEach(row => merged.set(row.chunk_id, row))
-        ;(fillData as SearchDocumentsRow[]).forEach(row => {
-          if (!merged.has(row.chunk_id)) merged.set(row.chunk_id, row)
-        })
-        rawResults = Array.from(merged.values())
-      }
-    }
-    
-    // Step 3: Apply re-ranking if enabled
-    if (useReranking && rawResults.length > 0) {
-      const chunksForReranking = rawResults.map(row => ({
-        chunk_text: row.chunk_text,
-        similarity: row.similarity,
-        chunkId: row.chunk_id,
-        documentId: row.document_id,
-        documentName: row.document_name,
-        category: row.category,
-        pageNumber: row.page_number,
-        chunkIndex: row.chunk_index,
-        sourceUrl: row.source_url
-      }))
-      
-      const rerankedChunks = await rerankChunks(query, chunksForReranking, topK)
-      
-      // Log re-ranking stats for debugging
-      const stats = getRerankingStats(chunksForReranking, rerankedChunks)
-      console.log(`Re-ranking stats: before=${stats.beforeAvg.toFixed(3)}, after=${stats.afterAvg.toFixed(3)}, improvement=${(stats.improvement * 100).toFixed(1)}%`)
-      
-      return rerankedChunks.map((chunk: RankedChunk) => ({
-        chunkId: chunk.chunkId || '',
-        documentId: chunk.documentId || '',
-        documentName: chunk.documentName || '',
-        category: chunk.category || '',
-        chunkText: chunk.chunk_text,
-        similarity: chunk.score,
-        pageNumber: chunk.pageNumber ?? null,
-        chunkIndex: chunk.chunkIndex || 0,
-        sourceUrl: chunk.sourceUrl
-      }))
-    }
-
-    // Step 4: Format results without re-ranking
-    const chunks: RelevantChunk[] = rawResults.slice(0, topK).map((row) => ({
-      chunkId: row.chunk_id,
-      documentId: row.document_id,
-      documentName: row.document_name,
-      category: row.category,
-      chunkText: row.chunk_text,
-      similarity: row.similarity,
-      pageNumber: row.page_number,
-      chunkIndex: row.chunk_index,
-      sourceUrl: row.source_url
+    const rerankInput = combined.map(chunk => ({
+      chunk_text: chunk.chunkText,
+      similarity: chunk.similarity,
+      chunkId: chunk.chunkId,
+      documentId: chunk.documentId,
+      documentName: chunk.documentName,
+      category: chunk.category,
+      pageNumber: chunk.pageNumber ?? null,
+      chunkIndex: chunk.chunkIndex,
+      sourceUrl: chunk.sourceUrl
     }))
 
-    return chunks
-  } catch (error) {
-    console.error('RAG pipeline error:', error)
-    throw new Error(`RAG retrieval failed: ${error instanceof Error ? error.message : 'Unknown error'}`)
+    const reranked = await rerankChunks(query, rerankInput, Math.min(15, rerankInput.length))
+
+    return reranked.slice(0, 15).map(chunk => ({
+      chunkId: chunk.chunkId || '',
+      documentId: chunk.documentId || '',
+      documentName: chunk.documentName || '',
+      category: chunk.category || '',
+      chunkText: chunk.chunk_text,
+      similarity: chunk.score,
+      pageNumber: chunk.pageNumber ?? null,
+      chunkIndex: chunk.chunkIndex || 0,
+      sourceUrl: chunk.sourceUrl
+    }))
   }
-}
 
-function extractKeywordQuery(query: string): string {
-  const stopwords = new Set([
-    'le','la','les','un','une','des','du','de','d','au','aux','et','ou','mais','donc','or','ni',
-    'ce','cet','cette','ces','qui','que','quoi','dont','où','quand','comment','pourquoi',
-    'dans','sur','sous','avec','sans','par','pour','chez','en','vers','entre','contre',
-    'est','sont','être','avoir','fait','faites','faire','peut','peuvent','doit','doivent',
-    'what','who','when','where','why','how','the','a','an','and','or','but','if','then','of',
-    'to','from','in','on','at','by','for','with','without','as','is','are','be','been','was','were'
-  ])
-
-  const normalized = query
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .toLowerCase()
-    .replace(/[^a-z0-9\s]/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim()
-
-  const keywords = normalized
-    .split(' ')
-    .filter(word => word.length > 3 && !stopwords.has(word))
-
-  return keywords.slice(0, 10).join(' ')
+  return searchDocuments(query, category, topK, similarityThreshold, useReranking, filterContext)
 }
 
 /**
@@ -283,6 +128,16 @@ export function formatChunksForContext(chunks: RelevantChunk[]): string[] {
 export function getUniqueDocumentIds(chunks: RelevantChunk[]): string[] {
   const uniqueIds = new Set(chunks.map(c => c.documentId))
   return Array.from(uniqueIds)
+}
+
+function deduplicateByChunkId(chunks: RelevantChunk[]): RelevantChunk[] {
+  const seen = new Set<string>()
+  return chunks.filter(chunk => {
+    const key = chunk.chunkId || `${chunk.documentId}-${chunk.chunkIndex}`
+    if (seen.has(key)) return false
+    seen.add(key)
+    return true
+  })
 }
 
 /**

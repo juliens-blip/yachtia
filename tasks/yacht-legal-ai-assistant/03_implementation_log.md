@@ -651,3 +651,25 @@ All 35 planned files have been successfully created and integrated. The Yacht Le
 **Documentation**: 8000+ lines
 
 **Status**: READY FOR DEPLOYMENT 🚀
+
+---
+
+## Phase 6: RAG Retrieval Optimization V2 (T019-T021) ✅
+
+**Date**: 2026-01-24
+**Status**: IN PROGRESS
+
+### T019 Validation
+- Ran `npx tsx scripts/test-retrieval-v2.ts`
+- Result: FAILED (missing env.GEMINI_API_KEY, retrieval tests could not execute)
+- Action: requires valid GEMINI_API_KEY to complete validation metrics
+
+### T020 Performance Optimizations
+- Added memoization cache in `detectDocType`.
+- Precompiled regex and acronym set in `extractCodesFromQuery`.
+- Added optional reranker profiling log via `RERANK_PROFILE=1`.
+
+### T021 Pavillon Extensions
+- Added flag patterns: Netherlands, Gibraltar, Jersey; reinforced Isle of Man.
+- Extended category flag detection for new flags.
+- Added multi-flag query logging in `scripts/test-retrieval-v2.ts`.

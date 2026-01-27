@@ -12,6 +12,8 @@ import { generateAnswer } from '@/lib/gemini'
 import { logChatAudit } from '@/lib/audit-logger'
 import { supabaseAdmin } from '@/lib/supabase'
 import { expandQuery, deduplicateChunks } from '@/lib/question-processor'
+import { validateResponse } from '@/lib/response-validator'
+import { countCitations, logMetricsDashboard, recordRagMetric } from '@/lib/metrics-logger'
 
 const MAX_REQUESTS_PER_MINUTE = parseInt(process.env.MAX_REQUESTS_PER_MINUTE || '10')
 
@@ -100,23 +102,12 @@ export async function POST(req: NextRequest) {
       category: c.category,
       source_url: c.sourceUrl
     }))
-    let answer: string
+    let answer: string = ''
     let geminiSources: Array<{ name: string; category: string; url?: string }> = []
     let groundingMetadata: Record<string, unknown> | undefined
+    let fallbackUsed = false
 
-    try {
-      const result = await generateAnswer(message, context, undefined, contextMetadata)
-      answer = result.answer
-      geminiSources = result.sources
-      groundingMetadata = result.groundingMetadata
-    } catch (error) {
-      const messageText = error instanceof Error ? error.message : String(error)
-      const isRateLimit = messageText.includes('429') || messageText.includes('Resource exhausted')
-
-      if (!isRateLimit) {
-        throw error
-      }
-
+    const buildFallbackAnswer = () => {
       const fallbackCitations = chunks
         .slice(0, 3)
         .map(chunk => `[Source: ${chunk.documentName}, page ${chunk.pageNumber ?? 'N/A'}]`)
@@ -130,7 +121,43 @@ export async function POST(req: NextRequest) {
         })
         .join('\n')
 
-      answer = `Résumé basé sur les documents internes disponibles:\n\n${fallbackSummary}\n\nSources: ${fallbackCitations}`
+      return `Résumé basé sur les documents internes disponibles:\n\n${fallbackSummary}\n\nSources: ${fallbackCitations}`
+    }
+
+    let attempt = 0
+    let questionForAttempt = message
+    const maxAttempts = 3
+
+    while (attempt < maxAttempts) {
+      try {
+        const result = await generateAnswer(questionForAttempt, context, undefined, contextMetadata)
+        const validation = validateResponse(result.answer, chunks)
+
+        answer = result.answer
+        geminiSources = result.sources
+        groundingMetadata = result.groundingMetadata
+
+        if (validation.valid || attempt === maxAttempts - 1) {
+          break
+        }
+
+        console.log('[RAG] Response validation retry:', validation.issues)
+        const retryInstruction = validation.retry || 'CITE AU MINIMUM 5 SOURCES DIFFÉRENTES'
+        questionForAttempt = `${message}\n\nINSTRUCTIONS DE VALIDATION: ${retryInstruction}`
+      } catch (error) {
+        const messageText = error instanceof Error ? error.message : String(error)
+        const isRateLimit = messageText.includes('429') || messageText.includes('Resource exhausted')
+
+        if (!isRateLimit) {
+          throw error
+        }
+
+        answer = buildFallbackAnswer()
+        fallbackUsed = true
+        break
+      }
+
+      attempt += 1
     }
 
     // Extract web sources from grounding metadata
@@ -203,6 +230,19 @@ export async function POST(req: NextRequest) {
       ipAddress: ip,
       userAgent: req.headers.get('user-agent') || undefined
     })
+
+    recordRagMetric({
+      timestamp: new Date().toISOString(),
+      query: message,
+      latencyMs: responseTime,
+      citations: countCitations(answer),
+      fallbackUsed,
+      docsUsed: getUniqueDocumentIds(chunks).length
+    })
+
+    if (process.env.RAG_METRICS_LOG === '1') {
+      logMetricsDashboard()
+    }
 
     // Step 5: Combine Gemini sources + web sources
     const formattedSources = geminiSources.map(s => ({
