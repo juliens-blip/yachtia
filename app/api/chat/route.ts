@@ -108,20 +108,26 @@ export async function POST(req: NextRequest) {
     let fallbackUsed = false
 
     const buildFallbackAnswer = () => {
-      const fallbackCitations = chunks
-        .slice(0, 3)
+      if (chunks.length === 0) {
+        return `Je n'ai pas trouvé de documents pertinents pour répondre à cette question. Veuillez reformuler ou préciser votre demande.`
+      }
+
+      // Build a structured fallback that actually answers the question
+      const sourceSummaries = chunks
+        .slice(0, 5)
+        .map(chunk => {
+          const text = chunk.chunkText.replace(/\s+/g, ' ').trim()
+          const preview = text.length > 400 ? text.slice(0, 400) + '…' : text
+          return `**${chunk.documentName}** (${chunk.category}${chunk.pageNumber ? `, p.${chunk.pageNumber}` : ''}):\n${preview}`
+        })
+        .join('\n\n')
+
+      const citations = chunks
+        .slice(0, 5)
         .map(chunk => `[Source: ${chunk.documentName}, page ${chunk.pageNumber ?? 'N/A'}]`)
         .join(' ')
 
-      const fallbackSummary = chunks
-        .slice(0, 3)
-        .map((chunk, index) => {
-          const preview = chunk.chunkText.replace(/\s+/g, ' ').slice(0, 220)
-          return `${index + 1}. ${preview}...`
-        })
-        .join('\n')
-
-      return `Résumé basé sur les documents internes disponibles:\n\n${fallbackSummary}\n\nSources: ${fallbackCitations}`
+      return `Voici les éléments trouvés dans les documents internes concernant votre question :\n\n${sourceSummaries}\n\n${citations}\n\n⚠️ *Réponse générée en mode dégradé (service temporairement surchargé). Pour une analyse complète et structurée, veuillez réessayer dans quelques instants.*\n\n⚖️ **Disclaimer**: Les informations fournies sont à titre informatif uniquement et ne constituent pas un avis juridique.`
     }
 
     let attempt = 0
