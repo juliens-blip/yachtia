@@ -191,14 +191,27 @@ ${question}
 ${contextBlock}${codePriorityBlock}
 
 COMMENT RÉPONDRE:
-1. Lis la question attentivement. Si elle contient plusieurs sous-questions, structure ta réponse en sections titrées (une par sous-question).
+1. DÉTECTION QUESTIONS MULTIPLES: Analyse si la question contient:
+   - Des numéros (1/, 2/, 3/ ou 1., 2., 3.)
+   - Des points séparés par tirets/bullet points
+   - Plusieurs interrogations distinctes
+   → Si OUI: Tu DOIS structurer ta réponse avec des titres de section ## pour CHAQUE sous-question.
+   → Exemple: Si question = "1/ éligibilité owner, 2/ inspections par âge, 3/ CYC", utilise:
+     ## 1. Éligibilité Owner
+     ## 2. Inspections par Âge
+     ## 3. Conséquences CYC
+
 2. Pour chaque point, cherche l'information dans les documents ci-dessous et cite précisément: [Source: NOM_DOCUMENT, page X, section Y]
-3. Synthétise en langage naturel clair et professionnel — ne copie PAS les chunks bruts.
+
+3. SYNTHÈSE OBLIGATOIRE: JAMAIS renvoyer les chunks bruts. TOUJOURS reformuler en langage naturel clair, professionnel et structuré.
+
 4. Priorise: Codes/Conventions > OGSR/Lois nationales > Guides professionnels > Articles.
+
 5. Si l'info est absente des documents, dis-le clairement en listant les documents analysés.
+
 6. Cite au moins 3 sources différentes quand c'est possible.
 
-INTERDICTIONS: pas de phrases vagues ("généralement", "typiquement"), pas d'invention, pas de source web.
+INTERDICTIONS: pas de chunks copiés-collés, pas de phrases vagues ("généralement", "typiquement"), pas d'invention, pas de source web.
 
 ${availableDocsBlock ? availableDocsBlock + '\n' : ''}
 ═══ DOCUMENTS DE RÉFÉRENCE (${effectiveContext.length} extraits) ═══

@@ -112,22 +112,47 @@ export async function POST(req: NextRequest) {
         return `Je n'ai pas trouvé de documents pertinents pour répondre à cette question. Veuillez reformuler ou préciser votre demande.`
       }
 
-      // Build a structured fallback that actually answers the question
-      const sourceSummaries = chunks
-        .slice(0, 5)
-        .map(chunk => {
-          const text = chunk.chunkText.replace(/\s+/g, ' ').trim()
-          const preview = text.length > 400 ? text.slice(0, 400) + '…' : text
-          return `**${chunk.documentName}** (${chunk.category}${chunk.pageNumber ? `, p.${chunk.pageNumber}` : ''}):\n${preview}`
-        })
-        .join('\n\n')
+      console.log('[RAG] FALLBACK USED: Building structured fallback (Gemini rate-limited)')
 
-      const citations = chunks
-        .slice(0, 5)
+      // Group chunks by document for a structured synthesis
+      const docGroups = new Map<string, typeof chunks>()
+      for (const chunk of chunks.slice(0, 8)) {
+        const key = chunk.documentName
+        if (!docGroups.has(key)) docGroups.set(key, [])
+        docGroups.get(key)!.push(chunk)
+      }
+
+      // Build a structured answer organized by source document
+      const sections: string[] = []
+      for (const [docName, docChunks] of docGroups) {
+        const category = docChunks[0].category
+        const keyPoints = docChunks
+          .slice(0, 3)
+          .map(chunk => {
+            const text = chunk.chunkText.replace(/\s+/g, ' ').trim()
+            // Extract first meaningful sentence(s) instead of raw dump
+            const sentences = text.split(/[.!?]+/).filter(s => s.trim().length > 20).slice(0, 2)
+            return sentences.length > 0
+              ? `- ${sentences.map(s => s.trim()).join('. ')}.`
+              : `- ${text.slice(0, 200).trim()}…`
+          })
+          .join('\n')
+
+        const pageRefs = docChunks
+          .filter(c => c.pageNumber)
+          .map(c => `p.${c.pageNumber}`)
+          .join(', ')
+
+        sections.push(`### ${docName} (${category}${pageRefs ? `, ${pageRefs}` : ''})\n\n${keyPoints}`)
+      }
+
+      const allCitations = chunks
+        .slice(0, 8)
         .map(chunk => `[Source: ${chunk.documentName}, page ${chunk.pageNumber ?? 'N/A'}]`)
-        .join(' ')
 
-      return `Voici les éléments trouvés dans les documents internes concernant votre question :\n\n${sourceSummaries}\n\n${citations}\n\n⚠️ *Réponse générée en mode dégradé (service temporairement surchargé). Pour une analyse complète et structurée, veuillez réessayer dans quelques instants.*\n\n⚖️ **Disclaimer**: Les informations fournies sont à titre informatif uniquement et ne constituent pas un avis juridique.`
+      const uniqueCitations = [...new Set(allCitations)].join(' ')
+
+      return `## Éléments de réponse\n\nD'après les documents internes analysés, voici les informations pertinentes concernant votre question :\n\n${sections.join('\n\n')}\n\n---\n\n${uniqueCitations}\n\n⚠️ *Réponse générée en mode simplifié (service temporairement surchargé). Pour une analyse complète et structurée, veuillez réessayer dans quelques instants.*\n\n⚖️ **Disclaimer**: Les informations fournies sont à titre informatif uniquement et ne constituent pas un avis juridique.`
     }
 
     let attempt = 0
@@ -144,6 +169,7 @@ export async function POST(req: NextRequest) {
         groundingMetadata = result.groundingMetadata
 
         if (validation.valid || attempt === maxAttempts - 1) {
+          console.log(`[RAG] GEMINI ANSWER OK (attempt ${attempt + 1}/${maxAttempts}, valid=${validation.valid}, citations=${countCitations(answer)})`)
           break
         }
 
@@ -158,6 +184,7 @@ export async function POST(req: NextRequest) {
           throw error
         }
 
+        console.log(`[RAG] FALLBACK TRIGGERED: Rate limit after ${attempt + 1} attempts. Error: ${messageText.slice(0, 100)}`)
         answer = buildFallbackAnswer()
         fallbackUsed = true
         break
