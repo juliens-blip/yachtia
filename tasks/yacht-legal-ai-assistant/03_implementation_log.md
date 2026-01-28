@@ -90,7 +90,7 @@
 - created_at
 
 ### Key Technical Decisions
-- **Vector Dimensions**: 768 (Gemini text-embedding-004)
+- **Vector Dimensions**: 768 (Gemini gemini-embedding-001)
 - **Index Type**: IVFFlat (optimal for 10k-100k vectors)
 - **Similarity Metric**: Cosine distance (<=>)
 - **Search Threshold**: 0.7 (70% similarity minimum)

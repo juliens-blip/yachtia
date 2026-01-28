@@ -64,10 +64,10 @@ try {
 }
 
 // Test 3: Embedding Generation
-console.log('📡 Test 3: Embedding Generation (text-embedding-004)');
+console.log('📡 Test 3: Embedding Generation (gemini-embedding-001)');
 try {
   const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
-  const embeddingModel = genAI.getGenerativeModel({ model: 'text-embedding-004' });
+  const embeddingModel = genAI.getGenerativeModel({ model: 'gemini-embedding-001' });
 
   const result = await embeddingModel.embedContent('maritime law yacht');
   const embedding = result.embedding.values;
@@ -82,7 +82,7 @@ try {
 console.log('📡 Test 4: RAG Vector Search');
 try {
   const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
-  const embeddingModel = genAI.getGenerativeModel({ model: 'text-embedding-004' });
+  const embeddingModel = genAI.getGenerativeModel({ model: 'gemini-embedding-001' });
   const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
   // Generate query embedding

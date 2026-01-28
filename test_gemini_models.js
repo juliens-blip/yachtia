@@ -84,7 +84,7 @@ async function main() {
     console.log('📊 Testing embedding models...\n');
 
     const embeddingModels = [
-      'text-embedding-004',
+      'gemini-embedding-001',
       'embedding-001'
     ];
 

@@ -197,7 +197,7 @@ The **Yacht Legal AI Assistant** project has been successfully completed and ver
 
 #### Vector Search Configuration
 ```
-✅ Model: text-embedding-004 (768 dimensions)
+✅ Model: gemini-embedding-001 (768 dimensions)
 ✅ Database: Supabase pgvector
 ✅ Index Type: IVFFlat (with lists=100)
 ✅ Similarity: Cosine similarity

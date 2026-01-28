@@ -289,7 +289,7 @@ PDF_PATH=/path/to/sample.pdf \\
 ### Documentation Technique
 - **Architecture RAG:** Vector search avec pgvector (IVFFlat, 768 dim)
 - **Chunking Strategy:** 500 tokens avec 100 overlap
-- **Embedding Model:** Gemini text-embedding-004
+- **Embedding Model:** Gemini gemini-embedding-001
 - **Chat Model:** Gemini 1.5 Flash
 - **Rate Limiting:** 10 req/min (in-memory, Redis pour production)
 

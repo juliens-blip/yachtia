@@ -159,7 +159,7 @@ function chunkText(text, chunkSize = 500, overlap = 200) {
 }
 
 async function generateEmbedding(text) {
-  const model = genAI.getGenerativeModel({ model: 'text-embedding-004' })
+  const model = genAI.getGenerativeModel({ model: 'gemini-embedding-001' })
   const result = await model.embedContent(text)
   return result.embedding.values
 }

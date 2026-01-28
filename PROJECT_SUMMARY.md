@@ -112,7 +112,7 @@ Créer un assistant juridique intelligent spécialisé en droit maritime pour br
        │
        ▼
 ┌─────────────────────┐
-│ Generate Embedding  │ (Gemini text-embedding-004)
+│ Generate Embedding  │ (Gemini gemini-embedding-001)
 │ 768 dimensions      │
 └──────┬──────────────┘
        │
@@ -402,7 +402,7 @@ yacht-legal-ai/
 
 ### 🎯 Décisions Techniques Importantes
 1. **Chunking**: 500 tokens with 100 overlap (optimal for RAG)
-2. **Embedding**: Gemini text-embedding-004 (768 dim)
+2. **Embedding**: Gemini gemini-embedding-001 (768 dim)
 3. **Index**: IVFFlat with lists=100 (for 10k-100k vectors)
 4. **Threshold**: 0.7 similarity (70% minimum)
 5. **Top-K**: 5 results (balance between quality and context)

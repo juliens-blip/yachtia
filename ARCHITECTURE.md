@@ -55,7 +55,7 @@ Yacht Legal AI est un système RAG (Retrieval-Augmented Generation) pour l'assis
 | Base de données | Supabase PostgreSQL | - |
 | Recherche vectorielle | pgvector | 0.5+ |
 | LLM | Gemini 2.0 Flash | - |
-| Embeddings | text-embedding-004 | 768 dims |
+| Embeddings | gemini-embedding-001 | 768 dims |
 | Markdown | react-markdown + remark-gfm | - |
 | Syntax Highlighting | react-syntax-highlighter | - |
 
@@ -141,7 +141,7 @@ graph TD
 | Overlap | 100 tokens | Chevauchement entre chunks |
 | Top-K | 5 | Nombre de chunks retournés |
 | Threshold | 0.7 | Score minimum de similarité |
-| Embedding dims | 768 | Dimensions text-embedding-004 |
+| Embedding dims | 768 | Dimensions gemini-embedding-001 |
 | Index | IVFFlat | Type d'index pgvector |
 
 ## Schéma Base de Données
