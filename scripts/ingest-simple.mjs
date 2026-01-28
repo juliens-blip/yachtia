@@ -159,8 +159,24 @@ function chunkText(text, chunkSize = 500, overlap = 200) {
 }
 
 async function generateEmbedding(text) {
-  const model = genAI.getGenerativeModel({ model: 'gemini-embedding-001' })
-  const result = await model.embedContent(text)
+  // Use REST API directly to force 768 dimensions (SDK 0.11 doesn't support outputDimensionality)
+  const response = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-embedding-001:embedContent?key=${process.env.GEMINI_API_KEY}`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        content: { parts: [{ text }] },
+        taskType: 'RETRIEVAL_DOCUMENT',
+        outputDimensionality: 768
+      })
+    }
+  )
+  if (!response.ok) {
+    const errorText = await response.text()
+    throw new Error(`Gemini embedding error ${response.status}: ${errorText}`)
+  }
+  const result = await response.json()
   return result.embedding.values
 }
 
