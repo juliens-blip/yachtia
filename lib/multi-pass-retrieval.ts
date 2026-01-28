@@ -30,11 +30,13 @@ export type SearchDocumentsFn = (
 const CODE_QUERY_MAP: Record<string, string> = {
   LY3: 'LY3 Large Yacht Code requirements obligations',
   'REG Yacht Code': 'REG Yacht Code requirements obligations',
-  CYC: 'Commercial Yacht Code CYC requirements obligations',
-  OGSR: 'Official Gazette Ship Registry OGSR requirements obligations',
+  CYC: 'CYC 2020 Commercial Yacht Code safety manning surveys',
+  OGSR: 'OGSR Malta ship registry registration eligibility',
   MLC: 'Maritime Labour Convention MLC requirements obligations',
   SOLAS: 'SOLAS Convention requirements obligations',
-  MARPOL: 'MARPOL requirements obligations'
+  MARPOL: 'MARPOL requirements obligations',
+  VAT: 'VAT Smartbook charter taxation France Italy Spain Mediterranean',
+  IYC: 'IYC charter taxes VAT by country Mediterranean'
 }
 
 export function isComplexQuery(query: string): boolean {
@@ -66,7 +68,13 @@ function buildEnrichedQuery(original: string, keywords: string[], variants: stri
 }
 
 function buildCodeQueries(codes: string[]): string[] {
-  const queries = codes.map(code => CODE_QUERY_MAP[code] ?? `${code} requirements obligations`)
+  const queries = codes.map(code => {
+    const baseQuery = CODE_QUERY_MAP[code] ?? `${code} requirements obligations`
+    const yearMatch = code.match(/\b(19|20)\d{2}\b/)
+    if (!yearMatch) return baseQuery
+    const year = yearMatch[0]
+    return baseQuery.includes(year) ? baseQuery : `${baseQuery} ${year}`
+  })
   return Array.from(new Set(queries))
 }
 

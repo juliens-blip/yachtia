@@ -13,7 +13,7 @@ const DOC_TYPE_BOOST: Record<DocType, number> = {
 
 const DETECT_DOC_TYPE_CACHE = new Map<string, DocType>()
 
-const QUERY_CODE_BOOST = 1.6
+const QUERY_CODE_BOOST = 3.0
 const FLAG_MATCH_BOOST = 2
 const FLAG_MISMATCH_PENALTY = 0.5
 
@@ -47,14 +47,25 @@ export function detectDocType(documentName?: string, category?: string): DocType
 
   const haystack = cacheKey
 
-  if (/(^|\s)ogsr(\s|$)/i.test(haystack) || haystack.includes('official guide to ship registries')) {
+  if (/(^|\s)ogsr(\s|$)/i.test(haystack) || haystack.includes('official guide to ship registries') ||
+      haystack.includes('transport malta') || haystack.includes('registration process') ||
+      haystack.includes('ship registry') || haystack.includes('merchant shipping')) {
     DETECT_DOC_TYPE_CACHE.set(cacheKey, 'OGSR')
     return 'OGSR'
   }
 
-  if (haystack.includes('code')) {
+  if (haystack.includes('code') || haystack.includes('cyc') || haystack.includes('ly3') ||
+      haystack.includes('solas') || haystack.includes('marpol') || haystack.includes('stcw') ||
+      haystack.includes('isps') || haystack.includes('ism') || haystack.includes('mlc')) {
     DETECT_DOC_TYPE_CACHE.set(cacheKey, 'CODE')
     return 'CODE'
+  }
+
+  // VAT/charter guides get LOI-level boost (authoritative)
+  if (haystack.includes('vat') || haystack.includes('smartbook') || haystack.includes('iyc') ||
+      haystack.includes('yacht welfare') || haystack.includes('charter tax')) {
+    DETECT_DOC_TYPE_CACHE.set(cacheKey, 'LOI')
+    return 'LOI'
   }
 
   if (

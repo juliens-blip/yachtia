@@ -176,14 +176,15 @@ async function test5_docFilterThreshold() {
       e.chunk.category === 'ARTICLE'
     ).length
 
-    // Expected: CODE 0.85 kept, 0.65 eliminated (< 0.7)
-    //           ARTICLE 0.88 kept, 0.75 and 0.50 eliminated (< 0.8)
-    const passed = 
-      codeFiltered.length === 1 && 
-      codeEliminatedCount === 1 &&
-      articleFiltered.length === 1 &&
-      articleEliminatedCount === 2 &&
-      result.filtered.length === 2
+    // Expected with new thresholds: CODE min=0.45, ARTICLE min=0.6
+    // CODE 0.85 kept, 0.65 kept (> 0.45)
+    // ARTICLE 0.88 kept, 0.75 kept (> 0.6), 0.50 eliminated (< 0.6)
+    const passed =
+      codeFiltered.length === 2 &&
+      codeEliminatedCount === 0 &&
+      articleFiltered.length === 2 &&
+      articleEliminatedCount === 1 &&
+      result.filtered.length === 4
 
     logTest(
       'Test 5: Doc-filter seuils',

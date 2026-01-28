@@ -19,8 +19,8 @@ export type DocFilterResult<T> = {
 }
 
 const MIN_SCORES: Record<'CODE' | 'ARTICLE', number> = {
-  CODE: 0.7,
-  ARTICLE: 0.8
+  CODE: 0.45,
+  ARTICLE: 0.6
 }
 
 const ARTICLE_PATTERNS = [

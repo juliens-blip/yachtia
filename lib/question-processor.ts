@@ -72,48 +72,47 @@ function generateVariants(question: string): string[] {
   const normalized = normalize(question)
   const variants: string[] = []
 
-  const isMaltaRegistration = normalized.includes('malta') && (
-    normalized.includes('registration') ||
-    normalized.includes('register') ||
-    normalized.includes('registry') ||
-    normalized.includes('immatriculation') ||
-    normalized.includes('enregistrement')
+  // Detect multiple aspects in the query and generate targeted variants for each
+  const hasMaltaRegistration = normalized.includes('malta') && (
+    normalized.includes('registration') || normalized.includes('register') ||
+    normalized.includes('registry') || normalized.includes('immatriculation') ||
+    normalized.includes('enregistrement') || normalized.includes('commercial')
   )
+  const hasCYC = /\bcyc\b/.test(normalized) || normalized.includes('commercial yacht code')
+  const hasVAT = normalized.includes('vat') || normalized.includes('tva') ||
+    normalized.includes('taxe') || normalized.includes('charter')
+  const hasFlag = normalized.includes('pavillon') || normalized.includes('flag') ||
+    normalized.includes('rmi') || normalized.includes('marshall')
 
-  if (isMaltaRegistration) {
-    variants.push('Malta registration eligibility requirements')
-    variants.push('Malta ship registry documents process')
-    variants.push('OGSR Malta vessel registration criteria')
-    return variants
+  // Generate ONE variant per detected aspect (no early return)
+  if (hasMaltaRegistration) {
+    variants.push('OGSR Malta registration eligibility owner société shipping organisation')
+  }
+  if (hasCYC) {
+    variants.push('CYC 2020 Commercial Yacht Code safety surveys manning equipment')
+  }
+  if (hasVAT) {
+    variants.push('VAT Smartbook charter taxation France Italy Spain Mediterranean IYC')
+  }
+  if (hasFlag) {
+    variants.push('flag state deregistration deletion certificate re-registration pavillon')
   }
 
-  const keywords = extractLegalKeywords(question)
-  
-  if (keywords.length > 0) {
-    const keywordVariant = `${question} (${keywords.slice(0, 5).join(', ')})`
-    variants.push(keywordVariant)
+  // Generic keyword expansion if no specific aspects detected
+  if (variants.length === 0) {
+    const keywords = extractLegalKeywords(question)
+    if (keywords.length > 0) {
+      variants.push(`${question} (${keywords.slice(0, 5).join(', ')})`)
+    }
+    if (question.includes('obligation')) {
+      variants.push(question.replace('obligation', 'responsabilité'))
+    }
+    if (question.includes('yacht')) {
+      variants.push(question.replace('yacht', 'vessel'))
+    }
   }
-  
-  if (question.includes('obligation')) {
-    variants.push(question.replace('obligation', 'responsabilité'))
-    variants.push(question.replace('obligation', 'devoir'))
-  }
-  if (question.includes('vendeur')) {
-    variants.push(question.replace('vendeur', 'seller'))
-  }
-  if (question.includes('acheteur')) {
-    variants.push(question.replace('acheteur', 'buyer'))
-  }
-  if (question.includes('contrat')) {
-    variants.push(question.replace('contrat', 'agreement'))
-    variants.push(question.replace('contrat', 'convention'))
-  }
-  if (question.includes('yacht')) {
-    variants.push(question.replace('yacht', 'vessel'))
-    variants.push(question.replace('yacht', 'navire'))
-  }
-  
-  return variants.slice(0, 3)
+
+  return variants.slice(0, 5)
 }
 
 export async function expandQuery(question: string): Promise<ExpandedQuery> {
