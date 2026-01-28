@@ -2,7 +2,7 @@
  * Gemini API Integration
  *
  * Provides functions for:
- * - Generating embeddings (text-embedding-004, 768 dimensions)
+ * - Generating embeddings (gemini-embedding-001, 768 dimensions)
  * - Generating chat responses with RAG context (gemini-1.5-flash)
  */
 
@@ -97,7 +97,7 @@ export async function generateEmbedding(text: string): Promise<number[]> {
     const cached = getCachedEmbedding(cacheKey)
     if (cached) return cached
 
-    const model = genAI.getGenerativeModel({ model: 'text-embedding-004' })
+    const model = genAI.getGenerativeModel({ model: 'gemini-embedding-001' })
     const result = await model.embedContent(text)
 
     if (!result.embedding || !result.embedding.values) {
