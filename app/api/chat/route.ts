@@ -107,14 +107,14 @@ export async function POST(req: NextRequest) {
     let groundingMetadata: Record<string, unknown> | undefined
     let fallbackUsed = false
 
-    const buildFallbackAnswer = () => {
-      if (chunks.length === 0) {
-        return `Je n'ai pas trouvé de documents pertinents pour répondre à cette question. Veuillez reformuler ou préciser votre demande.`
-      }
+    const buildFallbackAnswer = (reason: string) => {
+    if (chunks.length === 0) {
+      return `Je n'ai pas trouvé de documents pertinents pour répondre à cette question. Veuillez reformuler ou préciser votre demande.`
+    }
 
-      console.log('[RAG] FALLBACK USED: Building structured fallback (Gemini rate-limited)')
+    console.log(`[RAG] FALLBACK USED - Reason: ${reason}`)
 
-      // Group chunks by document for a structured synthesis
+    // Group chunks by document for a structured synthesis
       const docGroups = new Map<string, typeof chunks>()
       for (const chunk of chunks.slice(0, 8)) {
         const key = chunk.documentName
@@ -169,7 +169,7 @@ export async function POST(req: NextRequest) {
         groundingMetadata = result.groundingMetadata
 
         if (validation.valid || attempt === maxAttempts - 1) {
-          console.log(`[RAG] GEMINI ANSWER OK (attempt ${attempt + 1}/${maxAttempts}, valid=${validation.valid}, citations=${countCitations(answer)})`)
+          console.log(`[RAG] GEMINI ANSWER OK - attempt ${attempt + 1}/${maxAttempts}, valid=${validation.valid}, citations=${countCitations(answer)}`)
           break
         }
 
@@ -177,15 +177,25 @@ export async function POST(req: NextRequest) {
         const retryInstruction = validation.retry || 'CITE AU MINIMUM 5 SOURCES DIFFÉRENTES'
         questionForAttempt = `${message}\n\nINSTRUCTIONS DE VALIDATION: ${retryInstruction}`
       } catch (error) {
+        const status = (error as { status?: number })?.status
         const messageText = error instanceof Error ? error.message : String(error)
-        const isRateLimit = messageText.includes('429') || messageText.includes('Resource exhausted')
+        const stack = error instanceof Error ? error.stack : undefined
+        console.log('[RAG] GEMINI ERROR before fallback check', {
+          attempt: attempt + 1,
+          status,
+          message: messageText,
+          name: error instanceof Error ? error.name : typeof error,
+          stack
+        })
+        const isRateLimit = status === 429 || messageText.includes('429') || messageText.includes('Resource exhausted')
 
         if (!isRateLimit) {
           throw error
         }
 
-        console.log(`[RAG] FALLBACK TRIGGERED: Rate limit after ${attempt + 1} attempts. Error: ${messageText.slice(0, 100)}`)
-        answer = buildFallbackAnswer()
+        const rateLimitReason = messageText.includes('429') ? 'Rate limit 429' : 'Resource exhausted'
+        console.log(`[RAG] FALLBACK TRIGGERED after attempt ${attempt + 1}/${maxAttempts} - ${rateLimitReason}`)
+        answer = buildFallbackAnswer(rateLimitReason)
         fallbackUsed = true
         break
       }
