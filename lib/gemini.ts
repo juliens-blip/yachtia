@@ -97,8 +97,26 @@ export async function generateEmbedding(text: string): Promise<number[]> {
     const cached = getCachedEmbedding(cacheKey)
     if (cached) return cached
 
-    const model = genAI.getGenerativeModel({ model: 'gemini-embedding-001' })
-    const result = await model.embedContent(text)
+    // Use REST API directly to set outputDimensionality: 768 (SDK 0.11 doesn't support it)
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-embedding-001:embedContent?key=${process.env.GEMINI_API_KEY}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          content: { parts: [{ text }] },
+          taskType: 'RETRIEVAL_QUERY',
+          outputDimensionality: 768
+        })
+      }
+    )
+
+    if (!response.ok) {
+      const errorText = await response.text()
+      throw new Error(`Gemini API error ${response.status}: ${errorText}`)
+    }
+
+    const result = await response.json()
 
     if (!result.embedding || !result.embedding.values) {
       throw new Error('No embedding returned from Gemini API')
