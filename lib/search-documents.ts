@@ -10,6 +10,7 @@ import { filterByDocType, filterByFlag, logDocFilterResult, type DocFilterMode }
 import { extractFlag, extractCitedCodes, extractYachtContext } from './context-extractor'
 import { scoreDocument } from './document-scorer'
 import { scoreByContext } from './context-aware-scorer'
+import { extractFlagFromDocument, flagsMatch } from './flag-normalizer'
 import type { RelevantChunk } from './rag-pipeline'
 
 type SearchDocumentsRow = {
@@ -199,7 +200,6 @@ export async function searchDocuments(
 
     // Step 2.5: T-052 Hard filter by flag BEFORE re-ranking
     if (queryFlag) {
-      const { extractFlagFromDocument, flagsMatch } = require('./flag-normalizer')
       const beforeFilter = rawResults.length
       rawResults = rawResults.filter(row => {
         const docFlag = extractFlagFromDocument(row.document_name, row.category)

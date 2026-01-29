@@ -2,7 +2,13 @@
  * Document type and flag detection helpers for ranking boosts
  */
 
-import { extractFlagFromDocument, type CanonicalFlag } from './flag-normalizer'
+import {
+  extractFlagFromDocument,
+  extractFlagFromQuery,
+  flagsMatch,
+  normalizeFlag,
+  type CanonicalFlag
+} from './flag-normalizer'
 
 export type DocType = 'CODE' | 'OGSR' | 'LOI' | 'OTHER'
 
@@ -131,7 +137,6 @@ export function getQueryCodeBoost(query: string, documentName?: string, category
  * @deprecated Use extractFlagFromDocument or extractFlagFromQuery from flag-normalizer.ts
  */
 export function extractFlag(text: string): CanonicalFlag | null {
-  const { normalizeFlag } = require('./flag-normalizer')
   return normalizeFlag(text)
 }
 
@@ -140,8 +145,6 @@ function detectDocFlag(documentName?: string, category?: string): CanonicalFlag 
 }
 
 export function getFlagBoost(query: string, documentName?: string, category?: string): number {
-  const { extractFlagFromQuery, flagsMatch } = require('./flag-normalizer')
-  
   const queryFlag = extractFlagFromQuery(query)
   if (!queryFlag) return 1
 

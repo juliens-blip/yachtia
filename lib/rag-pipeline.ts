@@ -14,7 +14,6 @@ import type { FilterContext } from './document-filter'
 import { supabaseAdmin } from './supabase'
 import { expandQuery } from './question-processor'
 import { rerankChunks } from './reranker'
-import { extractFlagFromQuery } from './flag-normalizer'  // T-052
 
 export type RelevantChunk = {
   chunkId: string
