@@ -32,12 +32,37 @@ type ChunkInput = {
   sourceUrl?: string
 }
 
+const LEGAL_SYNONYM_MAP: Record<string, string[]> = {
+  registration: ['immatriculation', 'enregistrement'],
+  obligation: ['duty', 'requirement', 'devoir'],
+  insurance: ['assurance', 'couverture'],
+  crew: ['equipage', 'personnel'],
+  safety: ['securite', 'surete'],
+  inspection: ['survey', 'audit', 'controle'],
+  certificate: ['certificat', 'attestation'],
+  customs: ['douane'],
+  mortgage: ['hypotheque'],
+  deletion: ['radiation', 'deregistration']
+}
+
+const LEGAL_SYNONYM_LOOKUP = (() => {
+  const lookup = new Map<string, string[]>()
+  for (const [term, synonyms] of Object.entries(LEGAL_SYNONYM_MAP)) {
+    lookup.set(term, synonyms)
+    for (const synonym of synonyms) {
+      const existing = lookup.get(synonym) || []
+      lookup.set(synonym, Array.from(new Set([...existing, term])))
+    }
+  }
+  return lookup
+})()
+
 /**
  * Calculate semantic similarity between query and chunk text
  * Uses keyword overlap and term frequency
  */
 function calculateSemanticScore(query: string, chunkText: string): number {
-  const queryTerms = normalizeText(query).split(/\s+/).filter(t => t.length > 2)
+  const queryTerms = expandQueryTerms(normalizeText(query).split(/\s+/).filter(t => t.length > 2))
   const chunkTerms = normalizeText(chunkText).split(/\s+/).filter(t => t.length > 2)
   
   if (queryTerms.length === 0) return 0
@@ -63,6 +88,18 @@ function calculateSemanticScore(query: string, chunkText: string): number {
   return (coverageScore * 0.6 + densityScore * 0.4)
 }
 
+function expandQueryTerms(terms: string[]): string[] {
+  const expanded = new Set<string>()
+  for (const term of terms) {
+    expanded.add(term)
+    const synonyms = LEGAL_SYNONYM_LOOKUP.get(term)
+    if (synonyms) {
+      synonyms.forEach(s => expanded.add(s))
+    }
+  }
+  return Array.from(expanded)
+}
+
 /**
  * Normalize text for comparison
  */
@@ -72,6 +109,21 @@ function normalizeText(text: string): string {
     .replace(/[^\w\s]/g, ' ')
     .replace(/\s+/g, ' ')
     .trim()
+}
+
+function getTopTerms(text: string, limit: number = 3): string[] {
+  const terms = normalizeText(text).split(/\s+/).filter(t => t.length > 2)
+  if (terms.length === 0) return []
+
+  const counts = new Map<string, number>()
+  for (const term of terms) {
+    counts.set(term, (counts.get(term) || 0) + 1)
+  }
+
+  return Array.from(counts.entries())
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, limit)
+    .map(([term]) => term)
 }
 
 /**
@@ -126,16 +178,26 @@ function calculateDiversity(chunk: string, selectedChunks: string[]): number {
   if (selectedChunks.length === 0) return 1
   
   const chunkTerms = new Set(normalizeText(chunk).split(/\s+/))
+  const chunkTopTerms = getTopTerms(chunk, 3)
   
   let maxOverlap = 0
+  let maxTopTermOverlap = 0
   for (const selected of selectedChunks) {
     const selectedTerms = new Set(normalizeText(selected).split(/\s+/))
     const intersection = Array.from(chunkTerms).filter(t => selectedTerms.has(t)).length
     const overlap = intersection / Math.max(chunkTerms.size, 1)
     maxOverlap = Math.max(maxOverlap, overlap)
+
+    const selectedTopTerms = getTopTerms(selected, 3)
+    if (chunkTopTerms.length > 0 && selectedTopTerms.length > 0) {
+      const topIntersection = chunkTopTerms.filter(t => selectedTopTerms.includes(t)).length
+      const topOverlap = topIntersection / Math.max(chunkTopTerms.length, 1)
+      maxTopTermOverlap = Math.max(maxTopTermOverlap, topOverlap)
+    }
   }
   
-  return 1 - maxOverlap * 0.3
+  const topTermPenalty = maxTopTermOverlap > 0.7 ? 0.4 : 1
+  return (1 - maxOverlap * 0.3) * topTermPenalty
 }
 
 /**

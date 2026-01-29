@@ -7,8 +7,7 @@ import { supabaseAdmin } from './supabase'
 import { rerankChunks, getRerankingStats, type RankedChunk } from './reranker'
 import { filterDocuments, logEliminatedDocuments, type FilterContext, type DocumentChunk } from './document-filter'
 import { filterByDocType, filterByFlag, logDocFilterResult, type DocFilterMode } from './doc-filter'
-import { extractFlag, extractCitedCodes } from './context-extractor'
-import { extractYachtContext } from './context-extractor-enhanced'
+import { extractFlag, extractCitedCodes, extractYachtContext } from './context-extractor'
 import { scoreDocument } from './document-scorer'
 import { scoreByContext } from './context-aware-scorer'
 import type { RelevantChunk } from './rag-pipeline'
@@ -154,7 +153,8 @@ export async function searchDocuments(
   topK: number = 20,
   similarityThreshold: number = 0.6,
   useReranking: boolean = true,
-  filterContext?: FilterContext
+  filterContext?: FilterContext,
+  queryFlag?: string  // T-052: Flag detected from query for pre-filtering
 ): Promise<RelevantChunk[]> {
   try {
     // Step 1: Generate query embedding
@@ -197,7 +197,23 @@ export async function searchDocuments(
 
     let rawResults = (data as SearchDocumentsRow[] | null) || []
 
-    // Step 2.5: Extract cited codes and search by document name (metadata match)
+    // Step 2.5: T-052 Hard filter by flag BEFORE re-ranking
+    if (queryFlag) {
+      const { extractFlagFromDocument, flagsMatch } = require('./flag-normalizer')
+      const beforeFilter = rawResults.length
+      rawResults = rawResults.filter(row => {
+        const docFlag = extractFlagFromDocument(row.document_name, row.category)
+        if (!docFlag) return true  // Keep docs without flag
+        return flagsMatch(docFlag, queryFlag)
+      })
+      
+      const filtered = beforeFilter - rawResults.length
+      if (filtered > 0) {
+        console.log(`🚫 T-052 Hard filter: Eliminated ${filtered} chunks (wrong flag, query=${queryFlag})`)
+      }
+    }
+
+    // Step 2.6: Extract cited codes and search by document name (metadata match)
     const citedCodes = extractCitedCodes(query)
     if (citedCodes.length > 0) {
       console.log(`🔍 Cited codes detected: ${citedCodes.join(', ')}`)
@@ -227,12 +243,12 @@ export async function searchDocuments(
       }
     }
 
-    // Final fallback: keyword-reduced query with very low threshold
+    // Fallback: keyword-reduced query with lowered threshold (but not junk)
     if (rawResults.length === 0) {
       const keywordQuery = extractKeywordQuery(query)
       if (keywordQuery && keywordQuery !== query) {
         const keywordEmbedding = await generateEmbedding(keywordQuery)
-        const fallbackCount = Math.max(candidateCount * 3, 30)
+        const fallbackCount = Math.max(candidateCount * 2, 20)
 
         const { data: fallbackData, error: fallbackError } = await callSearchDocuments({
           query_embedding: keywordEmbedding,
@@ -246,16 +262,19 @@ export async function searchDocuments(
           console.error('Vector search fallback error:', fallbackError)
         } else {
           rawResults = (fallbackData as SearchDocumentsRow[] | null) || []
+          if (rawResults.length > 0) {
+            console.log(`⚠️ Fallback retrieval: ${rawResults.length} chunks (keyword query, threshold 0.2)`)
+          }
         }
       }
     }
 
-    // Absolute fallback: return nearest chunks with effectively no threshold
+    // Final fallback: broadened search with minimum quality threshold (no junk)
     if (rawResults.length === 0) {
       const fallbackCount = Math.max(candidateCount * 2, 20)
       const { data: finalData, error: finalError } = await callSearchDocuments({
         query_embedding: queryEmbedding,
-        match_threshold: -100.0,
+        match_threshold: 0.15,
         match_count: fallbackCount,
         filter_category: null,
         use_reranking: useReranking
@@ -265,29 +284,11 @@ export async function searchDocuments(
         console.error('Vector search final fallback error:', finalError)
       } else {
         rawResults = (finalData as SearchDocumentsRow[] | null) || []
-      }
-    }
-
-    // Ensure we have enough candidates to rerank
-    if (rawResults.length > 0 && rawResults.length < topK) {
-      const fillCount = Math.max(candidateCount * 2, 20)
-      const { data: fillData, error: fillError } = await callSearchDocuments({
-        query_embedding: queryEmbedding,
-        match_threshold: -100.0,
-        match_count: fillCount,
-        filter_category: null,
-        use_reranking: useReranking
-      })
-
-      if (fillError) {
-        console.error('Vector search fill error:', fillError)
-      } else if (fillData) {
-        const merged = new Map<string, SearchDocumentsRow>()
-        rawResults.forEach(row => merged.set(row.chunk_id, row))
-        ;(fillData as SearchDocumentsRow[]).forEach(row => {
-          if (!merged.has(row.chunk_id)) merged.set(row.chunk_id, row)
-        })
-        rawResults = Array.from(merged.values())
+        if (rawResults.length > 0) {
+          console.log(`⚠️ Final fallback: ${rawResults.length} chunks (threshold 0.15, no category filter)`)
+        } else {
+          console.log(`❌ No documents found for query even with fallback. Query may be outside document corpus.`)
+        }
       }
     }
 

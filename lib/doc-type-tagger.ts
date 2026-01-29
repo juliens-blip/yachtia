@@ -2,6 +2,8 @@
  * Document type and flag detection helpers for ranking boosts
  */
 
+import { extractFlagFromDocument, type CanonicalFlag } from './flag-normalizer'
+
 export type DocType = 'CODE' | 'OGSR' | 'LOI' | 'OTHER'
 
 const DOC_TYPE_BOOST: Record<DocType, number> = {
@@ -13,9 +15,9 @@ const DOC_TYPE_BOOST: Record<DocType, number> = {
 
 const DETECT_DOC_TYPE_CACHE = new Map<string, DocType>()
 
-const QUERY_CODE_BOOST = 3.0
+const QUERY_CODE_BOOST = 5.0  // T-056: Boost codes cités (was 3.0)
 const FLAG_MATCH_BOOST = 2
-const FLAG_MISMATCH_PENALTY = 0.5
+const FLAG_MISMATCH_PENALTY = 0.05  // T-053: Quasi-élimination docs hors pavillon (was 0.5)
 
 const CODE_WITH_DIGITS_REGEX = /\b[A-Z]{2,6}\s?-?\d{1,3}\b/g
 const ACRONYM_REGEX = /\b[A-Z]{2,6}\b/g
@@ -124,67 +126,29 @@ export function getQueryCodeBoost(query: string, documentName?: string, category
   return 1
 }
 
-export function extractFlag(text: string): string | null {
-  const normalized = normalizeForMatch(text)
-
-  const flagPatterns: Array<{ flag: string; patterns: string[] }> = [
-    { flag: 'MALTA', patterns: ['malta', 'maltese', 'malte', 'maltais'] },
-    { flag: 'CAYMAN', patterns: ['cayman', 'cayman islands', 'caimans', 'cayman island'] },
-    { flag: 'MARSHALL', patterns: ['marshall', 'marshall islands'] },
-    { flag: 'BVI', patterns: ['bvi', 'british virgin', 'british virgin islands', 'virgin islands'] },
-    { flag: 'IOM', patterns: ['isle of man', 'iom', 'isle-of-man'] },
-    { flag: 'JERSEY', patterns: ['jersey', 'channel islands'] },
-    { flag: 'GIBRALTAR', patterns: ['gibraltar'] },
-    { flag: 'NETHERLANDS', patterns: ['netherlands', 'dutch', 'holland', 'pays bas', 'pays-bas'] },
-    { flag: 'UK', patterns: ['uk', 'united kingdom', 'britain', 'british'] },
-    { flag: 'PANAMA', patterns: ['panama', 'panamanian'] },
-    { flag: 'BAHAMAS', patterns: ['bahamas', 'bahamian'] },
-    { flag: 'MONACO', patterns: ['monaco', 'monegasque'] },
-    { flag: 'MADEIRA', patterns: ['madeira', 'madere'] },
-    { flag: 'FRANCE', patterns: ['france', 'french', 'francais'] }
-  ]
-
-  for (const { flag, patterns } of flagPatterns) {
-    if (patterns.some(pattern => normalized.includes(pattern))) {
-      return flag
-    }
-  }
-
-  return null
+/**
+ * Extract flag from document metadata or text
+ * @deprecated Use extractFlagFromDocument or extractFlagFromQuery from flag-normalizer.ts
+ */
+export function extractFlag(text: string): CanonicalFlag | null {
+  const { normalizeFlag } = require('./flag-normalizer')
+  return normalizeFlag(text)
 }
 
-function detectDocFlag(documentName?: string, category?: string): string | null {
-  const categoryMatch = category?.match(/PAVILLON_([A-Z0-9_]+)/)
-  if (categoryMatch) {
-    const raw = categoryMatch[1]
-    if (raw.includes('MALTA')) return 'MALTA'
-    if (raw.includes('CAYMAN')) return 'CAYMAN'
-    if (raw.includes('MARSHALL')) return 'MARSHALL'
-    if (raw.includes('BVI')) return 'BVI'
-    if (raw.includes('IOM')) return 'IOM'
-    if (raw.includes('JERSEY')) return 'JERSEY'
-    if (raw.includes('GIBRALTAR')) return 'GIBRALTAR'
-    if (raw.includes('NETHERLANDS')) return 'NETHERLANDS'
-    if (raw.includes('UK') || raw.includes('UNITED_KINGDOM') || raw.includes('BRITAIN')) return 'UK'
-    if (raw.includes('PANAMA')) return 'PANAMA'
-    if (raw.includes('BAHAMAS')) return 'BAHAMAS'
-    if (raw.includes('MONACO')) return 'MONACO'
-    if (raw.includes('MADERE') || raw.includes('MADEIRA')) return 'MADEIRA'
-    if (raw.includes('FRANCE')) return 'FRANCE'
-  }
-
-  const nameFlag = extractFlag(`${documentName || ''} ${category || ''}`)
-  return nameFlag
+function detectDocFlag(documentName?: string, category?: string): CanonicalFlag | null {
+  return extractFlagFromDocument(documentName, category)
 }
 
 export function getFlagBoost(query: string, documentName?: string, category?: string): number {
-  const queryFlag = extractFlag(query)
+  const { extractFlagFromQuery, flagsMatch } = require('./flag-normalizer')
+  
+  const queryFlag = extractFlagFromQuery(query)
   if (!queryFlag) return 1
 
   const docFlag = detectDocFlag(documentName, category)
   if (!docFlag) return 1
 
-  if (docFlag === queryFlag) return FLAG_MATCH_BOOST
+  if (flagsMatch(queryFlag, docFlag)) return FLAG_MATCH_BOOST
 
   return FLAG_MISMATCH_PENALTY
 }

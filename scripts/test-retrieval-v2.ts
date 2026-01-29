@@ -39,7 +39,7 @@ async function testFlagFiltering() {
 
   const otherFlags = chunks.filter(chunk => {
     const flag = extractFlag(`${chunk.documentName} ${chunk.category}`)
-    return flag && flag !== 'MALTA'
+    return flag && flag !== 'Malta'
   })
 
   console.log('\nT013 - Flag filtering (Malta):')
@@ -97,7 +97,7 @@ async function testFlagCoverage() {
   for (const testCase of cases) {
     const chunks = await retrieveRelevantChunks(testCase.query, undefined, 10, 0.6)
     const flags = chunks.map(chunk => extractFlag(`${chunk.documentName} ${chunk.category}`) || 'N/A')
-    const hit = flags.includes(testCase.expected)
+    const hit = (flags as string[]).includes(testCase.expected)
     console.log(`  Query: ${testCase.query} -> ${hit ? '✅' : '❌'} (${flags.slice(0, 5).join(', ')})`)
     if (!hit) success = false
   }

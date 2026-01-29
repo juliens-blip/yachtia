@@ -15,7 +15,8 @@ const prompt = buildContextPrompt({
   size: 55,
   age: 21,
   buildYear: 2005,
-  flag: 'Malta'
+  flag: 'Malta',
+  tags: ['Large Yacht', 'SOLAS/MLC applicable', 'Enhanced inspections']
 })
 
 assert.ok(prompt.includes('SOLAS/MLC'))

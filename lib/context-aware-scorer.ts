@@ -2,7 +2,7 @@
  * Context-aware scoring helper based on extracted yacht context.
  */
 
-import type { YachtContext } from './context-extractor-enhanced'
+import type { YachtContext } from './context-extractor'
 
 const LARGE_YACHT_PATTERNS = [
   'ly3',

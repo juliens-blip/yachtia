@@ -2,7 +2,8 @@
  * Post-rerank document filtering helpers
  */
 
-import { detectDocType, extractFlag as extractDocFlag } from './doc-type-tagger'
+import { detectDocType } from './doc-type-tagger'
+import { extractFlagFromDocument, flagsMatch, type CanonicalFlag } from './flag-normalizer'
 
 export type DocFilterMode = 'STRICT' | 'BALANCED'
 
@@ -54,16 +55,8 @@ function detectDocTypeForFilter(documentName?: string, category?: string): 'CODE
   return 'OTHER'
 }
 
-function detectChunkFlag(documentName?: string, category?: string): string | null {
-  const categoryMatch = category?.match(/PAVILLON_([A-Z0-9_]+)/)
-  if (categoryMatch) {
-    return categoryMatch[1]
-      .replace(/_/g, ' ')
-      .trim()
-      .toUpperCase()
-  }
-
-  return extractDocFlag(`${documentName || ''} ${category || ''}`)
+function detectChunkFlag(documentName?: string, category?: string): CanonicalFlag | null {
+  return extractFlagFromDocument(documentName, category)
 }
 
 export function filterByDocType<T extends DocFilterChunk>(
@@ -109,8 +102,6 @@ export function filterByFlag<T extends DocFilterChunk>(
     return { filtered: chunks.slice(), eliminated, downranked }
   }
 
-  const normalizedQueryFlag = normalizeText(queryFlag).toUpperCase()
-
   for (const chunk of chunks) {
     const chunkFlag = detectChunkFlag(chunk.documentName, chunk.category)
     if (!chunkFlag) {
@@ -118,7 +109,7 @@ export function filterByFlag<T extends DocFilterChunk>(
       continue
     }
 
-    if (normalizeText(chunkFlag).toUpperCase() === normalizedQueryFlag) {
+    if (flagsMatch(chunkFlag, queryFlag)) {
       filtered.push(chunk)
       continue
     }

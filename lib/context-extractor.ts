@@ -2,12 +2,16 @@
  * Context extraction helpers for yacht-related queries
  */
 
+import { extractFlagFromQuery, type CanonicalFlag } from './flag-normalizer'
+
 export type YachtContext = {
   size?: number
   age?: number
   buildYear?: number
-  flag?: string
+  flag?: CanonicalFlag
+  gt?: number
   citedCodes?: string[]
+  tags: string[]
 }
 
 const SIZE_MIN_M = 24
@@ -25,22 +29,6 @@ const SIZE_PATTERNS = [
 const BUILD_YEAR_PATTERNS = [
   /built\s+in\s+(\d{4})/i,
   /construit\s+en\s+(\d{4})/i
-]
-
-const FLAG_PATTERNS: Array<{ flag: string; patterns: string[] }> = [
-  { flag: 'Malta', patterns: ['malta', 'maltese', 'malte', 'maltais'] },
-  { flag: 'Cayman', patterns: ['cayman', 'cayman islands', 'cayman island', 'caimans'] },
-  { flag: 'Marshall', patterns: ['marshall', 'marshall islands'] },
-  { flag: 'UK', patterns: ['uk', 'united kingdom', 'britain', 'british'] },
-  { flag: 'Panama', patterns: ['panama', 'panamanian'] },
-  { flag: 'Bahamas', patterns: ['bahamas', 'bahamian'] },
-  { flag: 'Monaco', patterns: ['monaco', 'monegasque'] },
-  { flag: 'France', patterns: ['france', 'french', 'francais'] },
-  { flag: 'Gibraltar', patterns: ['gibraltar'] },
-  { flag: 'Netherlands', patterns: ['netherlands', 'dutch', 'holland', 'pays bas', 'pays-bas'] },
-  { flag: 'Jersey', patterns: ['jersey', 'channel islands'] },
-  { flag: 'Isle of Man', patterns: ['isle of man', 'iom', 'isle-of-man'] },
-  { flag: 'BVI', patterns: ['bvi', 'british virgin', 'british virgin islands', 'virgin islands'] }
 ]
 
 const CODE_PATTERNS: Array<{ code: string; patterns: string[] }> = [
@@ -103,16 +91,8 @@ export function extractYachtAge(query: string): { age?: number; buildYear?: numb
   return {}
 }
 
-export function extractFlag(query: string): string | undefined {
-  const normalized = normalize(query)
-
-  for (const { flag, patterns } of FLAG_PATTERNS) {
-    if (patterns.some(pattern => normalized.includes(pattern))) {
-      return flag
-    }
-  }
-
-  return undefined
+export function extractFlag(query: string): CanonicalFlag | undefined {
+  return extractFlagFromQuery(query) || undefined
 }
 
 export function extractCitedCodes(query: string): string[] {
@@ -128,18 +108,39 @@ export function extractCitedCodes(query: string): string[] {
   return Array.from(new Set(codes))
 }
 
+export function extractGt(query: string): number | undefined {
+  const match = query.match(/(\d+)\s*gt\b/i)
+  if (!match) return undefined
+  const raw = Number(match[1])
+  if (!Number.isFinite(raw)) return undefined
+  return raw
+}
+
+function buildTags(size?: number, age?: number, gt?: number): string[] {
+  const tags: string[] = []
+  if (size !== undefined && size > 24) tags.push('Large Yacht')
+  if ((size !== undefined && size >= 50) || (gt !== undefined && gt >= 500)) tags.push('SOLAS/MLC applicable')
+  if (age !== undefined && age > 15) tags.push('Enhanced inspections')
+  if (age !== undefined && age > 25) tags.push('Age-related')
+  return tags
+}
+
 export function extractYachtContext(query: string): YachtContext {
   const size = extractYachtSize(query)
   const { age, buildYear } = extractYachtAge(query)
   const flag = extractFlag(query)
   const citedCodes = extractCitedCodes(query)
+  const gt = extractGt(query)
+  const tags = buildTags(size, age, gt)
 
   return {
     size,
     age,
     buildYear,
     flag,
-    citedCodes: citedCodes.length > 0 ? citedCodes : undefined
+    gt,
+    citedCodes: citedCodes.length > 0 ? citedCodes : undefined,
+    tags
   }
 }
 

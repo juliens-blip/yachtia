@@ -16,6 +16,7 @@ export type MultiPassOptions = {
   pass1TopK?: number
   pass2TopK?: number
   searchFn?: SearchDocumentsFn
+  queryFlag?: string  // T-052: Flag for hard filtering
 }
 
 export type SearchDocumentsFn = (
@@ -24,7 +25,8 @@ export type SearchDocumentsFn = (
   topK?: number,
   similarityThreshold?: number,
   useReranking?: boolean,
-  filterContext?: FilterContext
+  filterContext?: FilterContext,
+  queryFlag?: string  // T-052
 ) => Promise<RelevantChunk[]>
 
 const CODE_QUERY_MAP: Record<string, string> = {
@@ -142,7 +144,12 @@ export async function multiPassRetrieval(
     pass3 = pass3Results.flat()
   }
 
-  const merged = deduplicateChunks([...pass1, ...pass2, ...pass3])
+  // Weight pass results: pass1 (direct) > pass2 (enriched) > pass3 (speculative codes)
+  const weightedPass1 = pass1.map(c => ({ ...c, similarity: c.similarity * 1.0 }))
+  const weightedPass2 = pass2.map(c => ({ ...c, similarity: c.similarity * 0.85 }))
+  const weightedPass3 = pass3.map(c => ({ ...c, similarity: c.similarity * 0.7 }))
+
+  const merged = deduplicateChunks([...weightedPass1, ...weightedPass2, ...weightedPass3])
   merged.sort((a, b) => b.similarity - a.similarity)
 
   const pass3Log = codeQueries.length > 0 ? `, pass3=${pass3.length}` : ''

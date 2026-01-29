@@ -3,9 +3,7 @@
  * Vérifie que le pipeline RAG V3 gère correctement les cas problématiques.
  */
 
-import { extractYachtContext, buildContextPrompt } from '../lib/context-extractor'
-import { extractYachtContext as extractYachtContextEnhanced } from '../lib/context-extractor-enhanced'
-import { extractCitedCodes } from '../lib/context-extractor'
+import { extractYachtContext, buildContextPrompt, extractCitedCodes } from '../lib/context-extractor'
 import { scoreDocument } from '../lib/document-scorer'
 import { scoreByContext } from '../lib/context-aware-scorer'
 import { filterByDocType, filterByFlag } from '../lib/doc-filter'
@@ -44,7 +42,7 @@ assert(ctx1.age === 26, `extractYachtContext age=26 (got ${ctx1.age})`)
 assert(ctx1.flag === 'Malta', `extractYachtContext flag=Malta (got ${ctx1.flag})`)
 
 // 1b. Context extraction enhanced
-const ctx1e = extractYachtContextEnhanced(query1)
+const ctx1e = extractYachtContext(query1)
 assert(ctx1e.size === 45, `enhanced size=45 (got ${ctx1e.size})`)
 assert(ctx1e.flag === 'Malta', `enhanced flag=Malta (got ${ctx1e.flag})`)
 assert(ctx1e.tags.includes('Large Yacht'), `tagged 'Large Yacht' (tags: ${ctx1e.tags.join(', ')})`)
@@ -105,7 +103,7 @@ const ctx2 = extractYachtContext(query2)
 assert(ctx2.size === 50, `size=50 (got ${ctx2.size})`)
 assert(ctx2.flag === 'Cayman', `flag=Cayman (got ${ctx2.flag})`)
 
-const ctx2e = extractYachtContextEnhanced(query2)
+const ctx2e = extractYachtContext(query2)
 assert(ctx2e.tags.includes('Large Yacht'), `tagged Large Yacht`)
 assert(ctx2e.tags.includes('SOLAS/MLC applicable'), `tagged SOLAS/MLC for 50m (tags: ${ctx2e.tags.join(', ')})`)
 
