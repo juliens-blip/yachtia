@@ -13,11 +13,8 @@
  *   npm run ingest:category -- MYBA  # Ingère une catégorie
  */
 
-import * as dotenv from 'dotenv'
-import * as path from 'path'
-
-// Load .env.local
-dotenv.config({ path: path.join(__dirname, '../.env.local') })
+// CRITICAL: Load env FIRST before any imports
+import './load-env'
 
 import { REFERENCE_DOCS, type ReferenceDocument, getReferenceStats } from './reference-urls'
 import { extractTextFromPDF } from '../lib/pdf-parser'

@@ -8,15 +8,13 @@
 
 import { createClient } from '@supabase/supabase-js'
 
-// Validate environment variables
-if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
-  throw new Error('Missing env.NEXT_PUBLIC_SUPABASE_URL')
-}
-if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
-  throw new Error('Missing env.SUPABASE_SERVICE_ROLE_KEY')
-}
-if (!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
-  throw new Error('Missing env.NEXT_PUBLIC_SUPABASE_ANON_KEY')
+// Validate environment variables (deferred check for scripts with dotenv)
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+const supabaseServiceRole = process.env.SUPABASE_SERVICE_ROLE_KEY
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+
+if (!supabaseUrl || !supabaseServiceRole || !supabaseAnonKey) {
+  console.warn('⚠️  Supabase env vars not set - ensure .env.local is loaded before importing this module')
 }
 
 /**
@@ -24,8 +22,8 @@ if (!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
  * Bypasses RLS policies - use with caution
  */
 export const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY,
+  supabaseUrl || '',
+  supabaseServiceRole || '',
   {
     auth: {
       autoRefreshToken: false,
@@ -39,8 +37,8 @@ export const supabaseAdmin = createClient(
  * Respects RLS policies
  */
 export const supabaseClient = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  supabaseUrl || '',
+  supabaseAnonKey || ''
 )
 
 // Type definitions for database tables

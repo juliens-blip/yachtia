@@ -10,14 +10,15 @@ import { GoogleGenerativeAI } from '@google/generative-ai'
 import PQueue from 'p-queue'
 import crypto from 'crypto'
 import { logGeminiInteraction, extractCitations, detectInternetFallback } from './gemini-logger'
-import { extractYachtContext, buildContextPrompt } from './context-extractor'
+import { extractYachtContext } from './context-extractor'
 
-// Validate API key
-if (!process.env.GEMINI_API_KEY) {
-  throw new Error('Missing env.GEMINI_API_KEY')
+// Validate API key (deferred check for scripts with dotenv)
+const apiKey = process.env.GEMINI_API_KEY
+if (!apiKey) {
+  console.warn('⚠️  GEMINI_API_KEY not set - ensure .env.local is loaded before importing this module')
 }
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY)
+const genAI = new GoogleGenerativeAI(apiKey || 'dummy')
 
 const geminiQueue = new PQueue({
   concurrency: 1,
@@ -149,7 +150,7 @@ export async function generateAnswer(
   question: string,
   context: string[],
   conversationHistory?: Array<{ role: string; content: string }>,
-  contextMetadata?: Array<{ document_name: string; category: string; source_url?: string }>
+  contextMetadata?: Array<{ document_name: string; category: string; source_url?: string; page_number?: number | null }>
 ): Promise<{ answer: string; sources: SourceReference[]; groundingMetadata?: Record<string, unknown> }> {
   try {
     const cacheKey = buildCacheKey(question, context, contextMetadata)
@@ -177,85 +178,80 @@ export async function generateAnswer(
 
     // T023: Extract yacht context (size, age, flag, codes) for enriched prompt
     const yachtContext = extractYachtContext(question)
-    const contextEnrichment = buildContextPrompt(yachtContext)
-    const contextBlock = contextEnrichment
-      ? `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-🔍 CONTEXTE SPÉCIFIQUE DU YACHT
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-${contextEnrichment}
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-`
-      : ''
     const citedCodes = yachtContext.citedCodes || []
-    const availableDocNames = Array.from(new Set((contextMetadata || []).map(item => item.document_name).filter(Boolean)))
-    const availableDocsBlock = availableDocNames.length > 0
-      ? `DOCUMENTS DISPONIBLES (${availableDocNames.length}):\n- ${availableDocNames.slice(0, 20).join('\n- ')}\n\nRÈGLE: Tu dois citer AU MOINS 5 documents distincts parmi cette liste. Si moins de 5 documents sont disponibles, cite-les tous.`
-      : ''
 
-    // --- BUILD PROMPT: Question FIRST, then instructions, then context ---
     const codePriorityBlock = citedCodes.length > 0
-      ? `\nCODES CITÉS DANS LA QUESTION: ${citedCodes.join(', ')} — Tu DOIS les citer en priorité dans ta réponse.\nSi un code cité n'est pas dans les documents: mentionne-le explicitement.`
+      ? `\n**CODES CITED IN QUESTION:** ${citedCodes.join(', ')} — You MUST cite these in priority in your response.\nIf a cited code is not in the excerpts: mention it explicitly.`
       : ''
 
-    const systemPrompt = `Tu es un assistant juridique maritime expert. Tu DOIS répondre à la question ci-dessous en t'appuyant sur les documents fournis.
+    // Build labeled excerpts with doc names for easy citation
+    const labeledExcerpts = effectiveContext.length > 0 
+      ? effectiveContext.map((chunk, i) => {
+          const meta = contextMetadata?.[i]
+          const docName = meta?.document_name || `Document ${i+1}`
+          const page = meta?.page_number || 'n/a'
+          return `[EXCERPT ${i+1}] [DOC: ${docName}] [page: ${page}]\n${chunk}`
+        }).join('\n\n---\n\n')
+      : 'Aucun document pertinent trouvé.'
 
-═══ QUESTION DE L'UTILISATEUR ═══
+    const systemPrompt = `You are a maritime legal research assistant for lawyers (yacht registration, VAT, flag, charter/commercial compliance, CYC codes, MLC).
+
+**You MUST base your answer ONLY on the provided excerpts.** The excerpts are your "database".
+
+**Core rule:** If the excerpts contain relevant information, you must use it. Do **not** say "information not available" when the excerpts address the topic, even partially.
+
+**Output language:** Reply in the same language as the question (default: ${question.match(/[à-ÿ]/) ? 'French' : 'English'}).
+**Tone:** Professional maritime legal writing. Clear, practical, jurisdiction-aware.
+
+${codePriorityBlock}
+
+═══════════════════════════════════════════════════════
+METHOD (REQUIRED - FOLLOW THIS PROCESS)
+═══════════════════════════════════════════════════════
+
+**STEP 1: Evidence Extraction (MANDATORY)**
+Create a section called **"📋 Key Extracted Points (from provided sources)"** with 5-12 bullet points.
+Each bullet MUST have a citation: **[Source: DOC_NAME, page X]**
+Use at least **3 distinct sources** if available (prefer 5+ if available).
+
+**STEP 2: Answer**
+Use the extracted points to answer the user's question directly.
+- If question has parts (1/, 2/, 3/): answer under headings **## 1)**, **## 2)**, **## 3)**
+- Otherwise: use clear headings by topic (Eligibility, Process, Requirements, Compliance, etc.)
+
+**STEP 3: Gap Handling**
+- Only state a requirement if supported by excerpts
+- If a sub-question is not covered: write **"Not specified in provided excerpts."** then add what IS specified that is closest/relevant (still cited)
+- If sources conflict: note the inconsistency and cite both
+
+**STEP 4: Citation Rules (STRICT)**
+- Every legal/compliance statement must have citation immediately after
+- Format: **[Source: DOC_NAME, page X]**
+- Use EXACT DOC_NAME from excerpt label
+- Minimum **3 citations from 3 different documents**
+
+**STEP 5: Do Not Refuse Prematurely**
+Only use "not specified" AFTER you have extracted points and attempted to answer using them.
+
+═══════════════════════════════════════════════════════
+USER QUESTION
+═══════════════════════════════════════════════════════
 
 ${question}
 
-═══ INSTRUCTIONS ═══
+═══════════════════════════════════════════════════════
+PROVIDED EXCERPTS (AUTHORITATIVE SOURCES)
+═══════════════════════════════════════════════════════
 
-${contextBlock}${codePriorityBlock}
+${labeledExcerpts}
 
-COMMENT RÉPONDRE:
-1. DÉTECTION QUESTIONS MULTIPLES: Analyse si la question contient:
-   - Des numéros (1/, 2/, 3/ ou 1., 2., 3.)
-   - Des points séparés par tirets/bullet points
-   - Plusieurs interrogations distinctes
-   → Si OUI: Tu DOIS structurer ta réponse avec des titres de section ## pour CHAQUE sous-question.
-   → Exemple: Si question = "1/ éligibilité owner, 2/ inspections par âge, 3/ CYC", utilise:
-     ## 1. Éligibilité Owner
-     ## 2. Inspections par Âge
-     ## 3. Conséquences CYC
+═══════════════════════════════════════════════════════
+FINAL REMINDER
+═══════════════════════════════════════════════════════
 
-2. Pour chaque point, cherche l'information dans les documents ci-dessous et cite précisément: [Source: NOM_DOCUMENT, page X, section Y]
-
-3. SYNTHÈSE OBLIGATOIRE: JAMAIS renvoyer les chunks bruts. TOUJOURS reformuler en langage naturel clair, professionnel et structuré.
-
-4. HIÉRARCHIE DES SOURCES (utilise dans cet ordre):
-   - Codes & Conventions internationales (SOLAS, MLC, MARPOL, LY3, CYC, ISM, ISPS, STCW)
-   - Registres officiels & OGSR (Official Guide to Ship Registries, Transport Malta, etc.)
-   - Lois nationales (LOI, Décret, Ordonnance, Act, Regulation)
-   - Guides professionnels (VAT Smartbook, IYC, Yacht Welfare)
-   - Articles & analyses
-
-5. GESTION DE L'INFORMATION MANQUANTE:
-   - Si tu trouves l'info dans les documents: cite la source exacte.
-   - Si l'info est PARTIELLEMENT disponible: fournis ce que tu trouves et indique clairement ce qui manque.
-   - Si l'info est ABSENTE: écris EXACTEMENT:
-     "**Information non disponible dans la base documentaire.** Les documents suivants ont été analysés sans résultat pertinent sur ce point: [liste des documents]. Il est recommandé de consulter un avocat maritime spécialisé."
-   - NE JAMAIS inventer, deviner ou extrapoler au-delà de ce que les documents disent explicitement.
-   - NE JAMAIS utiliser de connaissances générales si les documents ne couvrent pas le sujet.
-
-6. Cite au moins 3 sources différentes quand c'est possible.
-
-INTERDICTIONS STRICTES:
-- Pas de chunks copiés-collés
-- Pas de phrases vagues ("généralement", "typiquement", "il est courant que")
-- Pas d'invention ni d'extrapolation
-- Pas de source web ni d'information externe aux documents fournis
-- N'UTILISE JAMAIS de recherche web. RÉPONDS UNIQUEMENT avec les documents fournis.
-
-${availableDocsBlock ? availableDocsBlock + '\n' : ''}
-═══ DOCUMENTS DE RÉFÉRENCE (${effectiveContext.length} extraits) ═══
-
-${effectiveContext.length > 0 ? effectiveContext.join('\n\n---\n\n') : 'Aucun document pertinent trouvé.'}
-
-═══ RAPPEL ═══
-Réponds DIRECTEMENT à la question ci-dessus. Structure ta réponse par thèmes/sous-questions. Chaque affirmation doit être sourcée. Termine par le disclaimer légal.
-
-⚖️ **Disclaimer**: Les informations fournies sont à titre informatif uniquement et ne constituent pas un avis juridique. Consultez un avocat maritime qualifié pour toute décision importante.`
+1. START with "📋 Key Extracted Points" section
+2. THEN provide structured answer
+3. END with: "⚖️ **Disclaimer**: This is general information, not legal advice. Consult a qualified maritime lawyer for specific advice."`
 
     // Build conversation history for context
     const history = conversationHistory?.map(msg => ({
@@ -373,7 +369,7 @@ Réponds DIRECTEMENT à la question ci-dessus. Structure ta réponse par thèmes
       logGeminiInteraction({
         question,
         chunksProvided: effectiveContext.length,
-        chunksPreviews: effectiveContext.slice(0, 3).map(c => c.substring(0, 100)),
+        chunksPreviews: effectiveContext.slice(0, 3).map(c => c?.substring(0, 100) || '[empty chunk]'),
         response: answerText,
         sourcesCited: extractCitations(answerText),
         usedInternet: detectInternetFallback(answerText)
