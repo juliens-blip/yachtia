@@ -194,6 +194,38 @@ export async function generateAnswer(
         }).join('\n\n---\n\n')
       : 'Aucun document pertinent trouvé.'
 
+    // Detect multi-aspect questions (registry transfer, etc.)
+    const isRegistryTransfer = question.match(/transf[eé]r|passage|change.*registr|from.*to.*registr|RMI.*Malt|Malt.*RMI/i)
+    
+    const multiAspectGuidance = isRegistryTransfer ? `
+
+═══════════════════════════════════════════════════════
+MULTI-ASPECT STRUCTURE (MANDATORY FOR REGISTRY TRANSFERS)
+═══════════════════════════════════════════════════════
+
+Your question involves a registry transfer or multi-jurisdictional process.
+You MUST structure your response in these 4 sections:
+
+## 1. Sortie du Registre d'Origine (Exit)
+[Procédure de radiation, documents requis, délais]
+Sources: [MI-XXX RMI, etc.]
+
+## 2. Entrée dans le Nouveau Registre (Entry)
+[Procédure d'enregistrement, exigences, documents]
+Sources: [OGSR Malta, Merchant Shipping Act, etc.]
+
+## 3. Conformité Technique et Réglementaire
+[CYC compliance, surveys, manning, certifications]
+Sources: [CYC 2020/2025, etc.]
+
+## 4. Implications Fiscales (VAT/Taxes)
+[TVA, importation, temporary admission, charter VAT]
+Sources: [VAT Guide, IYC, etc.]
+
+If a section lacks information: "Information non disponible dans les documents analysés."
+
+` : ''
+
     const systemPrompt = `You are a maritime legal research assistant for lawyers (yacht registration, VAT, flag, charter/commercial compliance, CYC codes, MLC).
 
 **You MUST base your answer ONLY on the provided excerpts.** The excerpts are your "database".
@@ -203,7 +235,20 @@ export async function generateAnswer(
 **Output language:** Reply in the same language as the question (default: ${question.match(/[à-ÿ]/) ? 'French' : 'English'}).
 **Tone:** Professional maritime legal writing. Clear, practical, jurisdiction-aware.
 
-${codePriorityBlock}
+${codePriorityBlock}${multiAspectGuidance}
+
+═══════════════════════════════════════════════════════
+SOURCE AUTHORITY HIERARCHY
+═══════════════════════════════════════════════════════
+
+**PRIORITY ORDER (most to least authoritative):**
+1. OFFICIAL_REGISTRY (OGSR, RMI Registry, MI-XXX guides)
+2. LEGISLATION (Merchant Shipping Act, Maritime Codes)
+3. GUIDANCE (CYC, VAT Guides, official manuals)
+4. COMMENTARY (blogs, articles)
+
+Always prioritize sources 1-2-3 before 4.
+Mark secondary sources: **[Source secondaire: Blog XYZ]**
 
 ═══════════════════════════════════════════════════════
 METHOD (REQUIRED - FOLLOW THIS PROCESS)
@@ -212,7 +257,7 @@ METHOD (REQUIRED - FOLLOW THIS PROCESS)
 **STEP 1: Evidence Extraction (MANDATORY)**
 Create a section called **"📋 Key Extracted Points (from provided sources)"** with 5-12 bullet points.
 Each bullet MUST have a citation: **[Source: DOC_NAME, page X]**
-Use at least **3 distinct sources** if available (prefer 5+ if available).
+Use **5-10 distinct sources** if available in excerpts (minimum 3).
 
 **STEP 2: Answer**
 Use the extracted points to answer the user's question directly.
@@ -228,10 +273,11 @@ Use the extracted points to answer the user's question directly.
 - Every legal/compliance statement must have citation immediately after
 - Format: **[Source: DOC_NAME, page X]**
 - Use EXACT DOC_NAME from excerpt label
-- Minimum **3 citations from 3 different documents**
+- Minimum **5 citations from 5 different documents** (if 5+ chunks available)
 
 **STEP 5: Do Not Refuse Prematurely**
 Only use "not specified" AFTER you have extracted points and attempted to answer using them.
+Do NOT request more information - work with provided excerpts only.
 
 ═══════════════════════════════════════════════════════
 USER QUESTION
@@ -265,18 +311,18 @@ FINAL REMINDER
 
     const runWithRetry = async () => {
       const prompt = systemPrompt
-      const delays = [2000, 4000, 8000]
+      const delays = [2000, 5000, 10000, 20000]
       for (let attempt = 0; attempt <= delays.length; attempt++) {
         try {
           return await geminiQueue.add(() => chat.sendMessage(prompt))
         } catch (error) {
           const status = (error as { status?: number })?.status
           const message = error instanceof Error ? error.message : String(error)
-          const isRateLimit = status === 429 || message.includes('429')
+          const isRateLimit = status === 429 || message.includes('429') || message.includes('Resource exhausted') || message.includes('quota') || message.includes('RESOURCE_EXHAUSTED')
           if (!isRateLimit || attempt === delays.length) {
             throw error
           }
-          const jitter = Math.floor(Math.random() * 300)
+          const jitter = Math.floor(Math.random() * 1000)
           await new Promise(resolve => setTimeout(resolve, delays[attempt] + jitter))
         }
       }

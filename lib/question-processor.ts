@@ -39,6 +39,18 @@ export interface ExpandedQuery {
   keywords: string[]
 }
 
+export interface QueryAspect {
+  name: string
+  keywords: string[]
+  weight: number
+}
+
+export interface ExpandedQueryMultiAspect {
+  original: string
+  aspects: QueryAspect[]
+  queries: { aspect: string; query: string }[]
+}
+
 function normalize(text: string): string {
   return text
     .normalize('NFD')
@@ -136,4 +148,100 @@ export function deduplicateChunks<T extends { chunk_text?: string; id?: string }
     seen.add(key)
     return true
   })
+}
+
+/**
+ * Detect multi-aspect patterns in query
+ * Returns null if < 2 aspects (use simple expansion)
+ */
+export function detectMultiAspect(query: string): QueryAspect[] | null {
+  const normalized = normalize(query)
+  const aspects: QueryAspect[] = []
+
+  // Pattern: transfer/re-flag involving RMI
+  const hasRMIExit = (normalized.includes('rmi') || normalized.includes('marshall')) &&
+    (normalized.includes('transfer') || normalized.includes('reflag') || 
+     normalized.includes('deletion') || normalized.includes('radiation') || 
+     normalized.includes('deregister') || /de\s+rmi|from\s+rmi/.test(normalized))
+
+  // Pattern: Malta entry/registration
+  const hasMaltaEntry = (normalized.includes('malta') || normalized.includes('malte')) &&
+    (normalized.includes('transfer') || normalized.includes('reflag') || 
+     normalized.includes('register') || normalized.includes('immatriculation') || 
+     normalized.includes('commercial') || /vers\s+malt|to\s+malt/.test(normalized))
+
+  // Pattern: Technical/CYC requirements (infer from transfer context)
+  const hasTechnical = normalized.includes('cyc') ||
+    normalized.includes('commercial yacht') ||
+    normalized.includes('surveys') ||
+    normalized.includes('safety') ||
+    normalized.includes('manning') ||
+    // Infer technical aspect if transfer involves Malta commercial registry
+    ((hasRMIExit || hasMaltaEntry) && (normalized.includes('yacht') || normalized.includes('vessel')))
+
+  // Pattern: Fiscal/VAT (infer from Malta transfer context)
+  const hasFiscal = normalized.includes('vat') || normalized.includes('tva') ||
+    normalized.includes('tax') || normalized.includes('fiscal') ||
+    normalized.includes('charter') ||
+    // Infer fiscal aspect for Malta transfers (VAT/charter implications)
+    (hasMaltaEntry && hasTechnical)
+
+  if (hasRMIExit) {
+    aspects.push({
+      name: 'Exit_RMI',
+      keywords: ['RMI', 'Marshall Islands', 'deletion', 'deregistration', 'closure', 'provisional', 'MI-103', 'flag state'],
+      weight: 1.0
+    })
+  }
+
+  if (hasMaltaEntry) {
+    aspects.push({
+      name: 'Entry_Malta',
+      keywords: ['Malta', 'OGSR', 'registration', 'commercial yacht', 'eligibility', 'société', 'shipping organisation', 'Transport Malta'],
+      weight: 1.0
+    })
+  }
+
+  if (hasTechnical) {
+    aspects.push({
+      name: 'Technical',
+      keywords: ['CYC', 'Commercial Yacht Code', 'surveys', 'safety equipment', 'manning', 'certificates', 'SOLAS', 'ISM'],
+      weight: 0.8
+    })
+  }
+
+  if (hasFiscal) {
+    aspects.push({
+      name: 'Fiscal',
+      keywords: ['VAT', 'taxation', 'charter', 'IYC', 'Smartbook', 'fiscal regime', 'Mediterranean', 'France', 'Italy'],
+      weight: 0.8
+    })
+  }
+
+  return aspects.length >= 2 ? aspects : null
+}
+
+/**
+ * Expand query with multi-aspect decomposition
+ * Falls back to simple expansion if < 2 aspects
+ */
+export async function expandQueryMultiAspect(query: string): Promise<ExpandedQueryMultiAspect | ExpandedQuery> {
+  const aspects = detectMultiAspect(query)
+
+  if (!aspects) {
+    // Fallback to simple expansion
+    return expandQuery(query)
+  }
+
+  // Multi-aspect: create enriched query per aspect
+  const queries = aspects.map(aspect => ({
+    aspect: aspect.name,
+    query: `${query} (${aspect.keywords.slice(0, 5).join(', ')})`
+  }))
+
+  return {
+    original: query,
+    aspects,
+    queries
+  }
 }

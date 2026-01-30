@@ -11,7 +11,7 @@ import { retrieveRelevantChunks, formatChunksForContext, getUniqueDocumentIds, R
 import { generateAnswer } from '@/lib/gemini'
 import { logChatAudit } from '@/lib/audit-logger'
 import { supabaseAdmin } from '@/lib/supabase'
-import { expandQuery, deduplicateChunks } from '@/lib/question-processor'
+import { deduplicateChunks, expandQueryMultiAspect, type ExpandedQueryMultiAspect, type ExpandedQuery } from '@/lib/question-processor'
 import { validateResponse } from '@/lib/response-validator'
 import { countCitations, logMetricsDashboard, recordRagMetric } from '@/lib/metrics-logger'
 
@@ -69,31 +69,125 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // Step 1: Expand query with variants and keywords
-    const expanded = await expandQuery(message)
-    console.log('[RAG] Query expansion:', {
+    // Step 1: Expand query (multi-aspect or simple)
+    const expanded = await expandQueryMultiAspect(message)
+    const isMultiAspect = 'aspects' in expanded && expanded.aspects.length >= 2
+    
+    console.log('[RAG] Query expansion:', isMultiAspect ? {
       original: expanded.original,
-      variants: expanded.variants.length,
-      keywords: expanded.keywords.slice(0, 5)
+      multiAspect: true,
+      aspects: (expanded as ExpandedQueryMultiAspect).aspects.map(a => a.name)
+    } : {
+      original: expanded.original,
+      multiAspect: false,
+      variants: (expanded as ExpandedQuery).variants.length
     })
 
-    // Step 2: Retrieve chunks with original + variants
-    const allChunkResults = await Promise.all([
-      retrieveRelevantChunks(expanded.original, category, 5, 0.7),
-      ...expanded.variants.map(v => retrieveRelevantChunks(v, category, 3, 0.7))
-    ])
+    // Step 2: Retrieve chunks (multi-aspect or simple)
+    let chunks: RelevantChunk[]
+    const aspectStats: Record<string, { count: number; docs: Set<string> }> = {}
     
-    // Deduplicate and merge chunks
-    const allChunks = allChunkResults.flat()
-    const chunks = deduplicateChunks(
-      allChunks.map(c => ({ ...c, id: c.chunkId }))
-    ).slice(0, 8) as RelevantChunk[]
-    
-    console.log('[RAG] Chunks retrieved:', {
-      total: allChunks.length,
-      unique: chunks.length,
-      topSimilarity: chunks[0]?.similarity || 0
-    })
+    if (isMultiAspect) {
+      const multiExpanded = expanded as ExpandedQueryMultiAspect
+      
+      // Retrieve 5 chunks per aspect with lower threshold (0.55)
+      const aspectResults = await Promise.all(
+        multiExpanded.queries.map(async ({ aspect, query }) => {
+          const aspectChunks = await retrieveRelevantChunks(query, category, 5, 0.55)
+          return { aspect, chunks: aspectChunks }
+        })
+      )
+      
+      // Deduplicate + round-robin: max 2 chunks/doc, balance aspects
+      const chunksByDoc = new Map<string, RelevantChunk[]>()
+      const chunksByAspect = new Map<string, RelevantChunk[]>()
+      
+      for (const { aspect, chunks: aspectChunks } of aspectResults) {
+        chunksByAspect.set(aspect, aspectChunks)
+        aspectStats[aspect] = { count: 0, docs: new Set() }
+        
+        for (const chunk of aspectChunks) {
+          const docChunks = chunksByDoc.get(chunk.documentName) || []
+          chunksByDoc.set(chunk.documentName, [...docChunks, chunk])
+        }
+      }
+      
+      // Round-robin selection: max 2 chunks/doc, strict balance
+      const selected: RelevantChunk[] = []
+      const selectedIds = new Set<string>()
+      const aspectCounts = new Map<string, number>()
+      
+      for (const aspect of multiExpanded.aspects.map(a => a.name)) {
+        aspectCounts.set(aspect, 0)
+      }
+      
+      // Target chunks per aspect (15 total / N aspects)
+      const targetPerAspect = Math.ceil(15 / multiExpanded.aspects.length)
+      
+      // First pass: fill each aspect to target
+      for (const { aspect, chunks: aspectChunks } of aspectResults) {
+        for (const chunk of aspectChunks) {
+          const currentCount = aspectCounts.get(aspect) || 0
+          if (currentCount >= targetPerAspect) break
+          if (selectedIds.has(chunk.chunkId)) continue
+          const docChunks = selected.filter(c => c.documentName === chunk.documentName)
+          if (docChunks.length >= 2) continue
+          
+          selected.push(chunk)
+          selectedIds.add(chunk.chunkId)
+          aspectCounts.set(aspect, currentCount + 1)
+          aspectStats[aspect].count++
+          aspectStats[aspect].docs.add(chunk.documentName)
+        }
+      }
+      
+      // Second pass: fill remaining slots (max 15 total)
+      for (const { aspect, chunks: aspectChunks } of aspectResults) {
+        for (const chunk of aspectChunks) {
+          if (selected.length >= 15) break
+          if (selectedIds.has(chunk.chunkId)) continue
+          const docChunks = selected.filter(c => c.documentName === chunk.documentName)
+          if (docChunks.length >= 2) continue
+          
+          selected.push(chunk)
+          selectedIds.add(chunk.chunkId)
+          aspectCounts.set(aspect, (aspectCounts.get(aspect) || 0) + 1)
+          aspectStats[aspect].count++
+          aspectStats[aspect].docs.add(chunk.documentName)
+        }
+      }
+      
+      chunks = selected
+      
+      const uniqueDocs = new Set(chunks.map(c => c.documentName)).size
+      console.log('[RAG] Multi-aspect retrieval:', {
+        totalChunks: chunks.length,
+        uniqueDocs,
+        byAspect: Object.fromEntries(
+          Object.entries(aspectStats).map(([aspect, stats]) => 
+            [aspect, { chunks: stats.count, docs: stats.docs.size }]
+          )
+        )
+      })
+    } else {
+      // Simple expansion fallback
+      const simpleExpanded = expanded as ExpandedQuery
+      const allChunkResults = await Promise.all([
+        retrieveRelevantChunks(simpleExpanded.original, category, 5, 0.7),
+        ...simpleExpanded.variants.map(v => retrieveRelevantChunks(v, category, 3, 0.7))
+      ])
+      
+      const allChunks = allChunkResults.flat()
+      chunks = deduplicateChunks(
+        allChunks.map(c => ({ ...c, id: c.chunkId }))
+      ).slice(0, 8) as RelevantChunk[]
+      
+      console.log('[RAG] Simple retrieval:', {
+        total: allChunks.length,
+        unique: chunks.length,
+        topSimilarity: chunks[0]?.similarity || 0
+      })
+    }
 
     // Step 3: Generate answer with Gemini + Grounding
     const context = formatChunksForContext(chunks)
@@ -107,57 +201,38 @@ export async function POST(req: NextRequest) {
     let groundingMetadata: Record<string, unknown> | undefined
     let fallbackUsed = false
 
-    const buildFallbackAnswer = (reason: string) => {
+    const buildFallbackAnswer = (reason: string, details?: { attempts?: number; chunks_count?: number; error?: string }) => {
     if (chunks.length === 0) {
       return `Je n'ai pas trouvé de documents pertinents pour répondre à cette question. Veuillez reformuler ou préciser votre demande.`
     }
 
-    console.log(`[RAG] FALLBACK USED - Reason: ${reason}`)
+    const uniqueDocs = new Set(chunks.map(c => c.documentName)).size
+    console.log(`[RAG] FALLBACK USED`, {
+      reason,
+      gemini_attempts: details?.attempts || 0,
+      chunks_count: details?.chunks_count || chunks.length,
+      unique_docs: uniqueDocs,
+      error_message: details?.error || 'N/A'
+    })
 
-    // Group chunks by document for a structured synthesis
-      const docGroups = new Map<string, typeof chunks>()
-      for (const chunk of chunks.slice(0, 8)) {
-        const key = chunk.documentName
-        if (!docGroups.has(key)) docGroups.set(key, [])
-        docGroups.get(key)!.push(chunk)
-      }
+    // Synthesize top 3 chunks instead of single snippet
+    const topChunks = chunks.slice(0, 3)
+    const synthesis = topChunks.map((chunk, idx) => {
+      const text = chunk.chunkText.replace(/\s+/g, ' ').trim()
+      const sentences = text.split(/[.!?]+/).filter(s => s.trim().length > 20).slice(0, 2)
+      const preview = sentences.length > 0 ? sentences.map(s => s.trim()).join('. ') : text.slice(0, 200)
+      return `**${idx + 1}. ${chunk.documentName}** (p.${chunk.pageNumber ?? 'N/A'}):\n${preview}…`
+    }).join('\n\n')
 
-      // Build a structured answer organized by source document
-      const sections: string[] = []
-      for (const [docName, docChunks] of docGroups) {
-        const category = docChunks[0].category
-        const keyPoints = docChunks
-          .slice(0, 3)
-          .map(chunk => {
-            const text = chunk.chunkText.replace(/\s+/g, ' ').trim()
-            // Extract first meaningful sentence(s) instead of raw dump
-            const sentences = text.split(/[.!?]+/).filter(s => s.trim().length > 20).slice(0, 2)
-            return sentences.length > 0
-              ? `- ${sentences.map(s => s.trim()).join('. ')}.`
-              : `- ${text.slice(0, 200).trim()}…`
-          })
-          .join('\n')
+    const allCitations = topChunks.map(chunk => `[Source: ${chunk.documentName}, page ${chunk.pageNumber ?? 'N/A'}]`)
+    const uniqueCitations = [...new Set(allCitations)].join(' ')
 
-        const pageRefs = docChunks
-          .filter(c => c.pageNumber)
-          .map(c => `p.${c.pageNumber}`)
-          .join(', ')
-
-        sections.push(`### ${docName} (${category}${pageRefs ? `, ${pageRefs}` : ''})\n\n${keyPoints}`)
-      }
-
-      const allCitations = chunks
-        .slice(0, 8)
-        .map(chunk => `[Source: ${chunk.documentName}, page ${chunk.pageNumber ?? 'N/A'}]`)
-
-      const uniqueCitations = [...new Set(allCitations)].join(' ')
-
-      return `## Éléments de réponse\n\nD'après les documents internes analysés, voici les informations pertinentes concernant votre question :\n\n${sections.join('\n\n')}\n\n---\n\n${uniqueCitations}\n\n⚠️ *Réponse générée en mode simplifié (service temporairement surchargé). Pour une analyse complète et structurée, veuillez réessayer dans quelques instants.*\n\n⚖️ **Disclaimer**: Les informations fournies sont à titre informatif uniquement et ne constituent pas un avis juridique.`
+    return `## Éléments de réponse\n\nD'après les documents internes analysés, voici les informations pertinentes :\n\n${synthesis}\n\n---\n\n${uniqueCitations}\n\n⚠️ *Réponse générée en mode simplifié (service temporairement surchargé). Pour une analyse complète et structurée, veuillez réessayer dans quelques instants.*\n\n⚖️ **Disclaimer**: Les informations fournies sont à titre informatif uniquement et ne constituent pas un avis juridique.`
     }
 
     let attempt = 0
     let questionForAttempt = message
-    const maxAttempts = 3
+    const maxAttempts = 1
 
     while (attempt < maxAttempts) {
       try {
@@ -170,6 +245,12 @@ export async function POST(req: NextRequest) {
 
         if (validation.valid || attempt === maxAttempts - 1) {
           console.log(`[RAG] GEMINI ANSWER OK - attempt ${attempt + 1}/${maxAttempts}, valid=${validation.valid}, citations=${countCitations(answer)}`)
+          
+          if (!validation.valid && attempt === maxAttempts - 1) {
+            const localCitations = chunks.slice(0,3).map(c => `[Source: ${c.documentName}, page ${c.pageNumber ?? 'N/A'}]`).join(', ')
+            answer += `\n\n**Sources:** ${localCitations}`
+          }
+          
           break
         }
 
@@ -195,7 +276,11 @@ export async function POST(req: NextRequest) {
 
         const rateLimitReason = messageText.includes('429') ? 'Rate limit 429' : 'Resource exhausted'
         console.log(`[RAG] FALLBACK TRIGGERED after attempt ${attempt + 1}/${maxAttempts} - ${rateLimitReason}`)
-        answer = buildFallbackAnswer(rateLimitReason)
+        answer = buildFallbackAnswer(rateLimitReason, {
+          attempts: attempt + 1,
+          chunks_count: chunks.length,
+          error: messageText
+        })
         fallbackUsed = true
         break
       }

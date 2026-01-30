@@ -78,6 +78,17 @@ export function validateResponse(response: string, chunks: RelevantChunk[]): Res
     }
   }
 
+  // Check source diversity if many chunks available
+  const uniqueSources = new Set(citedSources)
+  if (chunks.length >= 5 && uniqueSources.size < 3) {
+    issues.push(`Insufficient source diversity (${uniqueSources.size} unique sources with ${chunks.length} chunks available)`)
+    return {
+      valid: false,
+      retry: 'CITE AU MINIMUM 5 SOURCES DIFFÉRENTES parmi les documents fournis',
+      issues
+    }
+  }
+
   if (citedSources.length >= MIN_SOURCE_COUNT) {
     return { valid: true, issues }
   }

@@ -103,6 +103,37 @@ async function searchByDocumentName(
  * Merge metadata search results with vector search results
  * Boost metadata matches by x2
  */
+/**
+ * Boost official/authoritative docs by category and document name patterns
+ */
+function boostOfficialDocs(results: SearchDocumentsRow[]): SearchDocumentsRow[] {
+  return results.map(r => {
+    let boost = 0
+    
+    // Official categories
+    if (r.category === 'Official Law') boost += 0.15
+    if (r.category === 'Maritime Code') boost += 0.12
+    
+    // Known official docs
+    if (r.document_name?.match(/MI-\d+|CYC \d+|OGSR|Merchant Shipping Act|VAT.*Guide/i)) boost += 0.08
+    
+    return { ...r, similarity: Math.min(1.0, r.similarity + boost) }
+  })
+}
+
+/**
+ * Get effective threshold adjusted by category
+ */
+function getEffectiveThreshold(baseThreshold: number, category?: string): number {
+  const adjustments: Record<string, number> = {
+    'Official Law': -0.05,      // 0.70 → 0.65 (more permissive)
+    'Maritime Code': -0.05,     // 0.70 → 0.65
+    'Blog': +0.05,              // 0.70 → 0.75 (more strict)
+    'Article': +0.03            // 0.70 → 0.73
+  }
+  return baseThreshold + (category ? (adjustments[category] || 0) : 0)
+}
+
 function mergeWithMetadataBoost(
   vectorResults: SearchDocumentsRow[],
   metadataResults: SearchDocumentsRow[]
@@ -183,9 +214,12 @@ export async function searchDocuments(
       return { data, error }
     }
 
+    // Apply category-specific threshold adjustment
+    const effectiveThreshold = getEffectiveThreshold(similarityThreshold, category)
+    
     const { data, error } = await callSearchDocuments({
       query_embedding: queryEmbedding,
-      match_threshold: similarityThreshold,
+      match_threshold: effectiveThreshold,
       match_count: candidateCount,
       filter_category: category || null,
       use_reranking: useReranking
@@ -197,6 +231,9 @@ export async function searchDocuments(
     }
 
     let rawResults = (data as SearchDocumentsRow[] | null) || []
+
+    // Step 2.4: Apply official docs boost
+    rawResults = boostOfficialDocs(rawResults)
 
     // Step 2.5: T-052 Hard filter by flag BEFORE re-ranking
     if (queryFlag) {
