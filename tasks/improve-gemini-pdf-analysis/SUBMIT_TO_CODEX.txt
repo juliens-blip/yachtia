@@ -1,0 +1,117 @@
+═══════════════════════════════════════════════════════════════════════════════
+🤖 MISSION URGENTE - CODEX
+═══════════════════════════════════════════════════════════════════════════════
+
+Orchestrateur: Claude
+Priorité: HIGH
+Durée: 2h max
+Status: ⏳ EN ATTENTE DE TON DÉMARRAGE
+
+═══════════════════════════════════════════════════════════════════════════════
+📋 CONTEXTE
+═══════════════════════════════════════════════════════════════════════════════
+
+Projet: Yacht Legal AI (RAG + Gemini)
+Repo: /home/julien/Documents/iayacht/yacht-legal-ai
+
+PROBLÈME: Gemini ne récupère que 5 chunks et fallback trop vite sur internet.
+SOLUTION: Améliorer pipeline RAG (chunking + search + re-ranking)
+
+═══════════════════════════════════════════════════════════════════════════════
+🎯 TES 3 TÂCHES
+═══════════════════════════════════════════════════════════════════════════════
+
+TODO 1: AMÉLIORER CHUNKING PDF
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Fichier: lib/chunker.ts
+
+Modifications:
+1. Overlap: 100 → 200 tokens
+2. Ajouter métadonnées: { section, headers, page, chunk_index }
+3. Préserver structures (listes, tables, paragraphes)
+
+Test:
+```typescript
+const chunks = await processPDF(testPDF);
+assert(chunks[0].overlap === 200);
+assert(chunks[0].metadata?.page !== undefined);
+```
+
+TODO 2: OPTIMISER SEARCH_DOCUMENTS (SQL)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Fichier: MIGRATION_IMPROVE_SEARCH.sql (créer)
+
+Modifications:
+- match_threshold: 0.7 → 0.6
+- match_count: 5 → 10
+- Ajouter paramètre: use_reranking boolean DEFAULT TRUE
+
+Garder tous les types de colonnes identiques à l'actuel (source_url = varchar)
+
+TODO 3: IMPLÉMENTER RE-RANKING
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Nouveau fichier: lib/reranker.ts
+
+Fonction à créer:
+```typescript
+export async function rerankChunks(
+  query: string,
+  chunks: Array<{chunk_text: string, similarity: number}>,
+  topK: number = 5
+): Promise<Array<{chunk_text: string, score: number}>>
+```
+
+Logique:
+1. Calculer similarité sémantique (query vs chunk_text)
+2. Combiner avec vector similarity (50/50)
+3. Retourner top K chunks
+
+Intégrer dans: lib/rag-pipeline.ts
+
+═══════════════════════════════════════════════════════════════════════════════
+🧪 TESTS
+═══════════════════════════════════════════════════════════════════════════════
+
+Créer: scripts/test-rag-improvements.ts
+
+Tests requis:
+✅ Test 1: Chunking overlap = 200
+✅ Test 2: search_documents retourne 10 résultats
+✅ Test 3: Re-ranking améliore pertinence +20%
+
+Commande: npm run test:rag
+
+═══════════════════════════════════════════════════════════════════════════════
+📊 CRITÈRES DE SUCCÈS
+═══════════════════════════════════════════════════════════════════════════════
+
+✅ Overlap chunks = 200 tokens
+✅ Métadonnées présentes
+✅ SQL: threshold 0.6, count 10
+✅ Reranker implémenté et testé
+✅ 3/3 tests passent
+
+═══════════════════════════════════════════════════════════════════════════════
+📝 LIVRABLE
+═══════════════════════════════════════════════════════════════════════════════
+
+Répondre avec:
+1. Liste fichiers modifiés (avec diff)
+2. Nouveaux fichiers créés
+3. Résultats tests (copier output)
+4. Metrics: chunks avant/après, pertinence amélioration %
+
+═══════════════════════════════════════════════════════════════════════════════
+⚠️ CONTRAINTES
+═══════════════════════════════════════════════════════════════════════════════
+
+- Ne PAS casser compatibilité SQL
+- Ne PAS modifier schema tables
+- Tester avant de livrer
+- Durée max: 2h
+
+═══════════════════════════════════════════════════════════════════════════════
+
+🚀 CODEX, DÉMARRE MAINTENANT !
+
+Confirme réception et commence par TODO 1.

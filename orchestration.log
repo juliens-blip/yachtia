@@ -1,0 +1,12 @@
+🎯 ORCHESTRATION AUTOMATIQUE DÉMARRÉE
+Session: orchestration-iayacht
+CODEX: window 5
+Monitoring: Batch 1 (T-RAG-001, T-RAG-002, T-RAG-005)
+
+=== [15:25:26] Check CODEX ===
+  Batch 1: 3/3 complétés
+  ✅ BATCH 1 COMPLET!
+  🚀 Envoi BATCH 2 à CODEX...
+  ✅ Batch 2 envoyé à CODEX
+/home/julien/Documents/iayacht/orchestration_loop.sh: ligne 138: 0
+0 : erreur de syntaxe dans l'expression (le symbole erroné est « 0 »)

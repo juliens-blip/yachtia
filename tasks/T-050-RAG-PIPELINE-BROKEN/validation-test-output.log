@@ -1,0 +1,18 @@
+🧪 Test Ré-ingestion UN Document
+
+══════════════════════════════════════════════════════════════════════
+
+1️⃣ CHUNKING
+──────────────────────────────────────────────────────────────────────
+✅ 0 chunks créés
+
+2️⃣ GÉNÉRATION EMBEDDINGS
+──────────────────────────────────────────────────────────────────────
+Modèle: gemini-embedding-001 (768D)
+✅ 0 embeddings générés en 3ms
+
+❌ ERREUR: TypeError: Cannot read properties of undefined (reading 'length')
+    at main (/home/julien/Documents/iayacht/yacht-legal-ai/scripts/test-reingest-one-doc.ts:100:49)
+   Message: Cannot read properties of undefined (reading 'length')
+   Stack: TypeError: Cannot read properties of undefined (reading 'length')
+    at main (/home/julien/Documents/iayacht/yacht-legal-ai/scripts/test-reingest-one-doc.ts:100:49)

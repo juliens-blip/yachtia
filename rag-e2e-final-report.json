@@ -1,0 +1,110 @@
+{
+  "generatedAt": "2026-01-26T18:24:54.019Z",
+  "results": [
+    {
+      "name": "Malta 50m 2000 registration",
+      "success": true,
+      "details": [],
+      "topDocs": [
+        "Official Guide to Ship Registries - Malta",
+        "CCMalta - Malta Commercial Yacht Registration (Factsheet PDF)",
+        "Griffiths + Associates - Guide to Ship Registration Malta (PDF)",
+        "Malta CYC - Synopsis of Key Elements (PDF)",
+        "EMD - Registration of Ships/Yachts under Malta Flag (PDF)",
+        "Malta - Registration Process (Transport Malta Official)"
+      ],
+      "officialRatioTop5": 1,
+      "noiseRatioTop10": 0,
+      "citations": 5,
+      "falseMissingRate": 0
+    },
+    {
+      "name": "LY3 crew requirements",
+      "success": true,
+      "details": [],
+      "topDocs": [
+        "LY3 MSN 1851 (Dohle Yachts PDF)",
+        "RMI Yacht Code MI-103 (2021, amended Aug 2023) (PDF)",
+        "RMI Yacht Code MI-103 (PDF)",
+        "Malta CYC 2020 - Commercial Yacht Code (PDF)",
+        "RMI - Yacht Registry Brochure (PDF)",
+        "RMI - Manning & Crew Requirements for Yachts",
+        "Malta CYC 2025 (FFF Legal PDF)",
+        "Cayman Islands - Manning Policy Manual (PDF)",
+        "Cayman Islands - Manning Policy Manual (PDF)",
+        "Cayman Islands - Manning Policy Manual (PDF)"
+      ],
+      "officialRatioTop5": 0.6,
+      "noiseRatioTop10": null,
+      "citations": 5,
+      "falseMissingRate": 0
+    },
+    {
+      "name": "Cayman deletion certificate",
+      "success": true,
+      "details": [],
+      "topDocs": [
+        "Official Guide to Ship Registries - Cayman Islands (Red Ensign Group Cat 1)",
+        "Cayman Islands - Manning Policy Manual (PDF)",
+        "Stuart's Law - Vessel Registration in the Cayman Islands (PDF)",
+        "BTM Group - How to Register a Yacht with Cayman Registry",
+        "Higgs & Johnson - Cayman Shipping Guide (PDF)",
+        "Ocean Skies - British Register of Ships & Red Ensign Group",
+        "Croatia - Guidelines Registration Croatian Register of Yachts (PDF)",
+        "Yacht Welfare - VAT Guide 2018 Italy (PDF)",
+        "YachtBuyer - What Are International Waters?",
+        "Yachting Pages - Registration, Classification & ISM"
+      ],
+      "officialRatioTop5": 1,
+      "noiseRatioTop10": 0,
+      "citations": 5,
+      "falseMissingRate": 0
+    },
+    {
+      "name": "Multi-sources registration + inspection",
+      "success": true,
+      "details": [],
+      "topDocs": [
+        "Official Guide to Ship Registries - Malta",
+        "CCMalta - Malta Commercial Yacht Registration (Factsheet PDF)",
+        "Griffiths + Associates - Guide to Ship Registration Malta (PDF)",
+        "Malta CYC - Synopsis of Key Elements (PDF)",
+        "Malta - Registration Process (Transport Malta Official)",
+        "EMD - Registration of Ships/Yachts under Malta Flag (PDF)"
+      ],
+      "officialRatioTop5": 1,
+      "noiseRatioTop10": 0,
+      "citations": 5,
+      "falseMissingRate": 0
+    },
+    {
+      "name": "Context size/age 50m",
+      "success": true,
+      "details": [],
+      "topDocs": [
+        "LY3 - Large Commercial Yacht Code (CI Shipping PDF)",
+        "LY3 - Large Commercial Yacht Code (CI Shipping PDF)",
+        "LY3 - Large Commercial Yacht Code (CI Shipping PDF)",
+        "LY3 - Large Commercial Yacht Code (CI Shipping PDF)",
+        "LY3 - Large Commercial Yacht Code (CI Shipping PDF)",
+        "LY3 - Large Commercial Yacht Code (CI Shipping PDF)",
+        "LY3 - Large Commercial Yacht Code (CI Shipping PDF)",
+        "LY3 - Large Commercial Yacht Code (CI Shipping PDF)",
+        "LY3 - Large Commercial Yacht Code (CI Shipping PDF)",
+        "LY3 - Large Commercial Yacht Code (CI Shipping PDF)"
+      ],
+      "officialRatioTop5": 1,
+      "noiseRatioTop10": null,
+      "citations": 5,
+      "falseMissingRate": 0
+    }
+  ],
+  "metrics": {
+    "passCount": 5,
+    "total": 5,
+    "avgOfficialRatio": 0.9199999999999999,
+    "avgNoise": 0,
+    "avgCitations": 5,
+    "falseMissingRate": 0
+  }
+}

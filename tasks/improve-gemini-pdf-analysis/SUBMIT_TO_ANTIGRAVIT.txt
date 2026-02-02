@@ -1,0 +1,170 @@
+═══════════════════════════════════════════════════════════════════════════════
+🤖 MISSION URGENTE - ANTIGRAVIT
+═══════════════════════════════════════════════════════════════════════════════
+
+Orchestrateur: Claude
+Priorité: HIGH
+Durée: 1.5h max
+Status: ⏳ EN ATTENTE DE TON DÉMARRAGE
+
+═══════════════════════════════════════════════════════════════════════════════
+📋 CONTEXTE
+═══════════════════════════════════════════════════════════════════════════════
+
+Projet: Yacht Legal AI (RAG + Gemini)
+Repo: /home/julien/Documents/iayacht/yacht-legal-ai
+
+PROBLÈME: Gemini analyse superficiellement les PDFs et fallback sur internet trop vite.
+SOLUTION: Renforcer prompt + question expansion + logging détaillé
+
+═══════════════════════════════════════════════════════════════════════════════
+🎯 TES 3 TÂCHES
+═══════════════════════════════════════════════════════════════════════════════
+
+TODO 1: RENFORCER SYSTEM PROMPT GEMINI
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Fichier: lib/gemini.ts
+Fonction: generateAnswer()
+
+NOUVEAU SYSTEM PROMPT (remplacer l'actuel):
+
+```
+Tu es un assistant juridique maritime expert.
+
+RÈGLES D'ANALYSE DES DOCUMENTS (PRIORITÉ ABSOLUE):
+
+1. ANALYSE PROFONDE OBLIGATOIRE
+   - Lire ATTENTIVEMENT tous les chunks fournis
+   - Ne PAS se contenter d'un survol
+   - Chercher dans TOUS les passages pertinents
+
+2. CITATIONS PRÉCISES REQUISES
+   - Format: [Source: {nom_doc}, page {num}]
+   - Extraire citations textuelles si pertinent
+   - Exemple: "Selon l'article 5.2: '...' [Source: Code Maritime, page 42]"
+
+3. TRANSPARENCE SUR LES LIMITES
+   - Si pas de réponse dans docs → EXPLIQUER POURQUOI
+   - Format:
+     📚 Documents consultés: [liste]
+     ❌ Information manquante: [détail]
+     💡 Suggestion: [action]
+
+4. FALLBACK INTERNET EN DERNIER RECOURS
+   - Uniquement si aucune info dans chunks
+   - Justification claire requise
+   - Préciser quand info vient d'internet vs docs
+
+PROCESSUS:
+1. Analyser la question
+2. Explorer TOUS les chunks
+3. Synthétiser avec citations
+4. Vérifier complétude
+
+STYLE: Professionnel, structuré, précis, humain (pas "robot lawyer")
+```
+
+TODO 2: PRÉ-PROCESSING QUESTIONS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Nouveau fichier: lib/question-processor.ts
+
+Fonction à créer:
+```typescript
+export async function expandQuery(question: string): Promise<{
+  original: string;
+  variants: string[];
+  keywords: string[];
+}> {
+  // 1. Extraire keywords juridiques
+  const keywords = extractLegalKeywords(question);
+  
+  // 2. Générer 2-3 variantes sémantiques
+  const variants = generateVariants(question);
+  
+  return { original: question, variants, keywords };
+}
+```
+
+Intégrer dans: app/api/chat/route.ts
+- Chercher avec original + variantes
+- Dédupliquer chunks
+- Passer merged chunks à Gemini
+
+TODO 3: LOGGING DÉTAILLÉ
+━━━━━━━━━━━━━━━━━━━━━━
+Nouveau fichier: lib/gemini-logger.ts
+
+Fonctions:
+1. logGeminiInteraction(data) → console + file logs/gemini-rag.log
+2. extractCitations(response) → parse [Source: ...]
+3. detectInternetFallback(response) → detect internet patterns
+
+Structure log:
+{
+  timestamp,
+  question,
+  chunksProvided,
+  chunksPreviews,
+  response,
+  sourcesCited,
+  usedInternet,
+  latency
+}
+
+Intégrer dans: lib/gemini.ts (fonction generateAnswer)
+
+═══════════════════════════════════════════════════════════════════════════════
+🧪 TEST MANUEL
+═══════════════════════════════════════════════════════════════════════════════
+
+```bash
+npm run dev
+
+# Autre terminal:
+curl -X POST http://localhost:3000/api/chat \
+  -H "Content-Type: application/json" \
+  -d '{"message": "Quelles sont les obligations du vendeur?"}' \
+  | jq '.sources'
+
+tail -f logs/gemini-rag.log
+```
+
+Vérifier:
+✅ Réponse avec 3+ citations [Source: ...]
+✅ Pas de fallback internet si chunks pertinents
+✅ Logs détaillés présents
+
+═══════════════════════════════════════════════════════════════════════════════
+📊 CRITÈRES DE SUCCÈS
+═══════════════════════════════════════════════════════════════════════════════
+
+✅ System prompt renforcé (analyse profonde)
+✅ Question expansion (2-3 variantes)
+✅ Logging complet (gemini-logger.ts)
+✅ Test manuel: 3+ citations PDF
+✅ Fallback internet justifié uniquement
+
+═══════════════════════════════════════════════════════════════════════════════
+📝 LIVRABLE
+═══════════════════════════════════════════════════════════════════════════════
+
+Répondre avec:
+1. Fichiers modifiés (lib/gemini.ts, app/api/chat/route.ts)
+2. Nouveaux fichiers (question-processor.ts, gemini-logger.ts)
+3. Screenshot/copie réponse avec citations
+4. Extrait logs/gemini-rag.log
+
+═══════════════════════════════════════════════════════════════════════════════
+⚠️ CONTRAINTES
+═══════════════════════════════════════════════════════════════════════════════
+
+- Garder ton conversationnel (pas robot)
+- Ne PAS casser API /api/chat
+- Logger sans impact perf (<50ms)
+- Tester avant de livrer
+
+═══════════════════════════════════════════════════════════════════════════════
+
+🚀 ANTIGRAVIT, DÉMARRE MAINTENANT !
+
+Confirme réception et commence par TODO 1.

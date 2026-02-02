@@ -1,0 +1,46 @@
+🧪 Diagnostic Pgvector - T-050
+
+══════════════════════════════════════════════════════════════════════
+
+📦 A. Extension pgvector
+──────────────────────────────────────────────────────────────────────
+⚠️  pgvector extension status unknown (RPC not available)
+
+🔍 B. Échantillon chunk avec vector
+──────────────────────────────────────────────────────────────────────
+✅ Chunk sample: 36152c86-e5a8-427f-ac4a-be950bd1214d
+   Vector type: string
+   Vector is array: false
+
+🧮 C. Test opérateur <=> (similarité avec lui-même)
+──────────────────────────────────────────────────────────────────────
+Test: Appel search_documents avec embedding du chunk
+      (devrait retourner le chunk lui-même avec similarity ≈ 1.0)
+✅ Résultats trouvés: 5
+
+Top 3 résultats:
+[1]    similarity=1.000000 - 212 Yachts - MYBA Yacht Broker
+[2] 🎯 similarity=1.000000 - 212 Yachts - Why choose a MYBA Yacht Bro
+    ↳ C'est le chunk utilisé pour la query (parfait!)
+[3]    similarity=1.000000 - 212 Yachts - MYBA Yacht Broker
+
+✅ OPÉRATEUR <=> FONCTIONNE PARFAITEMENT
+   Similarité à lui-même: 1.000000
+
+🔬 D. Test avec embedding Gemini (query réelle)
+──────────────────────────────────────────────────────────────────────
+Query: "yacht sale contract obligations"
+Embedding: 768 dims
+Résultats avec embedding Gemini: 0
+
+❌ PROBLÈME CONFIRMÉ: Embedding Gemini retourne 0 résultats
+   Test threshold=0: 3 résultats
+   Similarité max: 0.075643
+
+❌ CAUSE RACINE IDENTIFIÉE:
+   → Embeddings DB générés avec MODÈLE DIFFÉRENT que Gemini API
+   → Similarités max < 0.1 signifie incompatibilité totale
+
+💡 SOLUTION:
+   1. Ré-ingérer tous les documents avec gemini-embedding-001
+   2. OU: Vérifier que ingestion utilisait bien outputDimensionality:768
